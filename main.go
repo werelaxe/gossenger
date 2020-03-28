@@ -40,6 +40,7 @@ func main() {
 	http.HandleFunc("/register", registerHandler(&api))
 	http.HandleFunc("/login", loginHandler(&api))
 	http.HandleFunc("/chats/create", createChatHandler(&api))
+	http.HandleFunc("/chats/add_user", addUserToChatHandler(&api))
 	http.HandleFunc("/", indexHandler(&api))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))

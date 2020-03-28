@@ -17,3 +17,8 @@ type CreateChatSchema struct {
 	AdminId uint   `json:"admin_id"`
 	Members []uint `json:"members"`
 }
+
+type AddUserToChatSchema struct {
+	UserId uint `json:"user_id"`
+	ChatId uint `json:"chat_id"`
+}

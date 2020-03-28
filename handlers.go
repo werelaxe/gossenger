@@ -132,3 +132,60 @@ func createChatHandler(api *Api) HandlerFuncType {
 		}
 	}
 }
+
+func addUserToChatHandler(api *Api) HandlerFuncType {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		user := ensureLogin(api, writer, request)
+		if user == nil {
+			return
+		}
+
+		var addUserToChatData models.AddUserToChatSchema
+		if err := json.NewDecoder(request.Body).Decode(&addUserToChatData); err != nil {
+			log.Println("Can add user to chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		newMember, err := api.GetUserById(addUserToChatData.UserId)
+		if err != nil {
+			log.Println("Can add user to chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		chat, err := api.GetChat(addUserToChatData.ChatId)
+		if err != nil {
+			log.Println("Can add user to chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		users, err := api.ListChatMembers(chat)
+		if err != nil {
+			log.Println("Can add user to chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		uniqueUserIds := getUniqueUserIds(users)
+
+		if _, ok := uniqueUserIds[user.ID]; !ok {
+			log.Println("Can add user to chat: logged user must be in chat")
+			writer.WriteHeader(400)
+			return
+		}
+
+		if _, ok := uniqueUserIds[newMember.ID]; ok {
+			log.Println("Can add user to chat: user is already in chat")
+			writer.WriteHeader(400)
+			return
+		}
+
+		if err = api.AddUserToChat(newMember, chat); err != nil {
+			log.Println("Can add user to chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+	}
+}

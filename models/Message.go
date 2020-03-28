@@ -5,7 +5,7 @@ import "github.com/jinzhu/gorm"
 type Message struct {
 	gorm.Model
 	Text        string
-	SenderRefer int64
-	ChatRefer   int64
+	SenderRefer uint
+	ChatRefer   uint
 	Time        int64
 }

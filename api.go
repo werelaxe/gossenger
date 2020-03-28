@@ -83,13 +83,17 @@ func (api *Api) GetChat(id uint) (*models.Chat, error) {
 	return &chat, nil
 }
 
-func (api *Api) CreateChat(title string, admin *models.User, users []*models.User) error {
+func getUniqueUserIds(users []*models.User) map[uint]bool {
 	var userIds []uint
 	for _, v := range users {
 		userIds = append(userIds, v.ID)
 	}
+	return unique(userIds)
+}
 
-	uniqueUserIds := unique(userIds)
+func (api *Api) CreateChat(title string, admin *models.User, users []*models.User) error {
+	uniqueUserIds := getUniqueUserIds(users)
+
 	if len(uniqueUserIds) < 2 {
 		return errors.New("can not create chat: members must contain at least two unique users")
 	}
@@ -134,7 +138,7 @@ func (api *Api) ListUserChats(user *models.User) ([]*models.Chat, error) {
 	return chats, nil
 }
 
-func (api *Api) IsUserChatMember(userId, chatId int64) (bool, error) {
+func (api *Api) IsUserChatMember(userId, chatId uint) (bool, error) {
 	var count int64
 	if err := api.db.
 		Table("chat_members").
@@ -145,7 +149,7 @@ func (api *Api) IsUserChatMember(userId, chatId int64) (bool, error) {
 	return count > 0, nil
 }
 
-func (api *Api) SendMessage(messageText string, senderId, chatId int64) error {
+func (api *Api) SendMessage(messageText string, senderId, chatId uint) error {
 	ok, err := api.IsUserChatMember(senderId, chatId)
 	if err != nil {
 		return errors.New("can not send message: " + err.Error())
