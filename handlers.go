@@ -100,3 +100,9 @@ func loginHandler(api *Api) HandlerFuncType {
 		}
 	}
 }
+
+func sendMessageHandler(api *Api) HandlerFuncType {
+	return func(writer http.ResponseWriter, request *http.Request) {
+
+	}
+}

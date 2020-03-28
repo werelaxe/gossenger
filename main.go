@@ -5,9 +5,18 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"log"
+	"messenger/models"
 	"net/http"
 )
 
+func get(name string) *models.User {
+	return &models.User{
+		Nickname:     name,
+		FirstName:    name,
+		LastName:     name,
+		PasswordHash: Hash(name),
+	}
+}
 
 func main() {
 	db, err := gorm.Open("postgres", "host=localhost port=5432 user=postgres dbname=messenger password=password sslmode=disable")
@@ -27,8 +36,6 @@ func main() {
 	}
 
 	api.Init()
-
-
 	http.HandleFunc("/register", registerHandler(&api))
 	http.HandleFunc("/login", loginHandler(&api))
 	http.HandleFunc("/", indexHandler(&api))
