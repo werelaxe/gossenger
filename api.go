@@ -111,13 +111,36 @@ func (api *Api) ListUserChats(user *models.User) ([]*models.Chat, error) {
 	return chats, nil
 }
 
-func (api *Api) IsUserChatMember(user *models.User, chat *models.Chat) (bool, error) {
+func (api *Api) IsUserChatMember(userId, chatId int64) (bool, error) {
 	var count int64
 	if err := api.db.
 		Table("chat_members").
-		Where("user_id = ? and chat_id = ?", user.ID, chat.ID).
+		Where("user_id = ? and chat_id = ?", userId, chatId).
 		Count(&count).Error; err != nil {
 		return false, errors.New("can not check is user chat member: " + err.Error())
 	}
 	return count > 0, nil
+}
+
+func (api *Api) SendMessage(messageText string, senderId, chatId int64) error {
+	ok, err := api.IsUserChatMember(senderId, chatId)
+	if err != nil {
+		return errors.New("can not send message: " + err.Error())
+	}
+	if !ok {
+		return errors.New("can not send message: user is not a chat member")
+	}
+
+	message := models.Message{
+		Text:        messageText,
+		SenderRefer: senderId,
+		ChatRefer:   chatId,
+		Time:        time.Now().Unix(),
+	}
+
+	if err = api.db.Create(&message).Error; err != nil {
+		return errors.New("can not send message: " + err.Error())
+	}
+
+	return nil
 }
