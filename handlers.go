@@ -2,15 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"messenger/models"
 	"net/http"
 )
 
-
 type HandlerFuncType func(writer http.ResponseWriter, request *http.Request)
-
 
 func registerHandler(api *Api) HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
@@ -37,7 +34,8 @@ func registerHandler(api *Api) HandlerFuncType {
 			return
 		}
 
-		if err := api.Auth(registerUserData.Nickname, request, writer); err != nil {
+		salt := api.CreateSession(registerUserData.Nickname)
+		if err := Auth(registerUserData.Nickname, request, writer, salt); err != nil {
 			log.Println("Can not auth after registration: " + err.Error())
 			writer.WriteHeader(400)
 			return
@@ -47,30 +45,19 @@ func registerHandler(api *Api) HandlerFuncType {
 
 func indexHandler(api *Api) HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		nickname, err := api.CheckAuth(request, writer)
-		if err != nil {
-			log.Println("Can not index: " + err.Error())
-			writer.WriteHeader(400)
+		nickname, ok := ensureLogin(api, writer, request)
+		if !ok {
 			return
 		}
-		if nickname == "" {
-			if _, err := writer.Write([]byte("You are anon. Redirecting...")); err != nil {
-				log.Println("Can not redirect: " + err.Error())
-				writer.WriteHeader(400)
-				return
-			}
-			log.Println("Wrong cookie")
-			writer.WriteHeader(400)
-			return
-		}
-		if _, err = writer.Write([]byte("Hello, " + nickname)); err != nil {
+
+		if _, err := writer.Write([]byte("Hello, " + nickname)); err != nil {
 			log.Println("Can not write page: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
+
 	}
 }
-
 
 func loginHandler(api *Api) HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
@@ -91,12 +78,25 @@ func loginHandler(api *Api) HandlerFuncType {
 			return
 		}
 
-		if err := api.Auth(loginUserData.Nickname, request, writer); err != nil {
+		ok, err := api.IsValidPair(loginUserData.Nickname, loginUserData.Password)
+		if err != nil {
+			log.Println("Can not check pair: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		if !ok {
+			log.Println("Invalid login/password")
+			writer.WriteHeader(400)
+			return
+		}
+
+		salt := api.CreateSession(loginUserData.Nickname)
+
+		if err := Auth(loginUserData.Nickname, request, writer, salt); err != nil {
 			log.Println("Can not login user: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
-		fmt.Println(loginUserData)
-		fmt.Println("Logged in!")
 	}
 }

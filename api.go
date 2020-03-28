@@ -6,15 +6,13 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/jinzhu/gorm"
 	"messenger/models"
-	"net/http"
 	"time"
 )
 
 type Api struct {
-	db *gorm.DB
+	db    *gorm.DB
 	redis *redis.Client
 }
-
 
 func (api *Api) Init() {
 	initRandom()
@@ -22,12 +20,6 @@ func (api *Api) Init() {
 		panic(result.Error)
 	}
 }
-
-
-func (api *Api) CreateSession(nickname string, r *http.Request) {
-
-}
-
 
 func (api *Api) RegisterUser(nickname, firstName, lastName, password string) error {
 	result := api.db.Create(&models.User{
@@ -42,7 +34,6 @@ func (api *Api) RegisterUser(nickname, firstName, lastName, password string) err
 	return nil
 }
 
-
 func (api *Api) IsValidPair(nickname, password string) (bool, error) {
 	var user models.User
 
@@ -52,37 +43,17 @@ func (api *Api) IsValidPair(nickname, password string) (bool, error) {
 	return bytes.Equal(user.PasswordHash, Hash(password)), nil
 }
 
-
-func (api *Api) Auth(nickname string, r *http.Request, w http.ResponseWriter) error {
+func (api *Api) CreateSession(nickname string) string {
 	salt := RandStringRunes(20)
-	api.redis.Set(nickname, salt, time.Second * 600)
-
-	cookie := http.Cookie{
-		Name: "sid",
-		Value: base64.StdEncoding.EncodeToString(Hash(nickname + salt)),
-	}
-	http.SetCookie(w, &cookie)
-	http.SetCookie(w, &http.Cookie{
-		Name: "nickname",
-		Value: nickname,
-	})
-	return nil
+	api.redis.Set(nickname, salt, time.Second*600)
+	return salt
 }
 
-
-func (api *Api) CheckAuth(r *http.Request, w http.ResponseWriter) (string, error) {
-	sidCookie, err := r.Cookie("sid")
-	if err != nil {
-		return "", nil
+func (api *Api) ValidateSession(nickname, sid string) bool {
+	salt := api.redis.Get(nickname)
+	con := nickname + salt.Val()
+	if base64.StdEncoding.EncodeToString(Hash(con)) == sid {
+		return false
 	}
-	nicknameCookie, err := r.Cookie("nickname")
-	if err != nil {
-		return "", nil
-	}
-	salt := api.redis.Get(nicknameCookie.Value)
-	con := nicknameCookie.Value + salt.Val()
-	if base64.StdEncoding.EncodeToString(Hash(con)) == sidCookie.Value {
-		return nicknameCookie.Value, nil
-	}
-	return "", nil
+	return true
 }
