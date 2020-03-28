@@ -9,5 +9,6 @@ type User struct {
 	LastName     string
 	PasswordHash []byte
 	SentMessages []Message `gorm:"foreignkey:SenderRefer"`
+	OwnChats     []Chat    `gorm:"foreignkey:AdminRefer"`
 	Chats        []*Chat   `gorm:"many2many:chat_members;"`
 }

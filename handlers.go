@@ -35,7 +35,7 @@ func registerHandler(api *Api) HandlerFuncType {
 		}
 
 		salt := api.CreateSession(registerUserData.Nickname)
-		if err := Auth(registerUserData.Nickname, request, writer, salt); err != nil {
+		if err := Auth(registerUserData.Nickname, writer, salt); err != nil {
 			log.Println("Can not auth after registration: " + err.Error())
 			writer.WriteHeader(400)
 			return
@@ -45,12 +45,12 @@ func registerHandler(api *Api) HandlerFuncType {
 
 func indexHandler(api *Api) HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		nickname, ok := ensureLogin(api, writer, request)
-		if !ok {
+		user := ensureLogin(api, writer, request)
+		if user == nil {
 			return
 		}
 
-		if _, err := writer.Write([]byte("Hello, " + nickname)); err != nil {
+		if _, err := writer.Write([]byte("Hello, " + user.FirstName + " " + user.LastName)); err != nil {
 			log.Println("Can not write page: " + err.Error())
 			writer.WriteHeader(400)
 			return
@@ -67,9 +67,7 @@ func loginHandler(api *Api) HandlerFuncType {
 		}
 
 		var loginUserData models.LoginUserSchema
-		decoder := json.NewDecoder(request.Body)
-
-		if err := decoder.Decode(&loginUserData); err != nil {
+		if err := json.NewDecoder(request.Body).Decode(&loginUserData); err != nil {
 			if e, ok := err.(*json.SyntaxError); ok {
 				log.Printf("syntax error at byte offset %d", e.Offset)
 			}
@@ -93,7 +91,7 @@ func loginHandler(api *Api) HandlerFuncType {
 
 		salt := api.CreateSession(loginUserData.Nickname)
 
-		if err := Auth(loginUserData.Nickname, request, writer, salt); err != nil {
+		if err := Auth(loginUserData.Nickname, writer, salt); err != nil {
 			log.Println("Can not login user: " + err.Error())
 			writer.WriteHeader(400)
 			return
@@ -101,8 +99,36 @@ func loginHandler(api *Api) HandlerFuncType {
 	}
 }
 
-func sendMessageHandler(api *Api) HandlerFuncType {
+func createChatHandler(api *Api) HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
+		user := ensureLogin(api, writer, request)
+		if user == nil {
+			return
+		}
 
+		var createChatData models.CreateChatSchema
+		if err := json.NewDecoder(request.Body).Decode(&createChatData); err != nil {
+			log.Println("Can not create chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		var users []*models.User
+
+		for memberId, _ := range unique(createChatData.Members) {
+			member, err := api.GetUserById(memberId)
+			if err != nil {
+				log.Println("Can not create chat: " + err.Error())
+				writer.WriteHeader(400)
+				return
+			}
+			users = append(users, member)
+		}
+
+		if err := api.CreateChat(createChatData.Title, user, users); err != nil {
+			log.Println("Can not create chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
 	}
 }

@@ -59,7 +59,7 @@ func (api *Api) ValidateSession(nickname, sid string) bool {
 	return true
 }
 
-func (api *Api) GetUser(nickname string) (*models.User, error) {
+func (api *Api) GetUserByNickname(nickname string) (*models.User, error) {
 	var user models.User
 	if err := api.db.Where("nickname = ?", nickname).First(&user).Error; err != nil {
 		return nil, errors.New("can not find user: " + err.Error())
@@ -67,7 +67,15 @@ func (api *Api) GetUser(nickname string) (*models.User, error) {
 	return &user, nil
 }
 
-func (api *Api) GetChat(id int64) (*models.Chat, error) {
+func (api *Api) GetUserById(id uint) (*models.User, error) {
+	var user models.User
+	if err := api.db.Where("id = ?", id).First(&user).Error; err != nil {
+		return nil, errors.New("can not find user: " + err.Error())
+	}
+	return &user, nil
+}
+
+func (api *Api) GetChat(id uint) (*models.Chat, error) {
 	var chat models.Chat
 	if err := api.db.Where("id = ?", id).First(&chat).Error; err != nil {
 		return nil, errors.New("can not find chat: " + err.Error())
@@ -75,10 +83,25 @@ func (api *Api) GetChat(id int64) (*models.Chat, error) {
 	return &chat, nil
 }
 
-func (api *Api) CreateChat(title string, users []*models.User) error {
+func (api *Api) CreateChat(title string, admin *models.User, users []*models.User) error {
+	var userIds []uint
+	for _, v := range users {
+		userIds = append(userIds, v.ID)
+	}
+
+	uniqueUserIds := unique(userIds)
+	if len(uniqueUserIds) < 2 {
+		return errors.New("can not create chat: members must contain at least two unique users")
+	}
+
+	if _, ok := uniqueUserIds[admin.ID]; !ok {
+		return errors.New("can not create chat: members must contain admin")
+	}
+
 	chat := models.Chat{
-		Title:   title,
-		Members: users,
+		AdminRefer: admin.ID,
+		Title:      title,
+		Members:    users,
 	}
 	if err := api.db.Create(&chat).Error; err != nil {
 		return errors.New("can not create chat: " + err.Error())

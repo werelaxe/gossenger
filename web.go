@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"log"
+	"messenger/models"
 	"net/http"
 )
 
@@ -12,7 +13,7 @@ func redirect(writer http.ResponseWriter, request *http.Request, path string) {
 	}
 }
 
-func Auth(nickname string, r *http.Request, w http.ResponseWriter, salt string) error {
+func Auth(nickname string, w http.ResponseWriter, salt string) error {
 	cookie := http.Cookie{
 		Name:  "sid",
 		Value: base64.StdEncoding.EncodeToString(Hash(nickname + salt)),
@@ -25,7 +26,7 @@ func Auth(nickname string, r *http.Request, w http.ResponseWriter, salt string) 
 	return nil
 }
 
-func CheckAuth(api *Api, r *http.Request, w http.ResponseWriter) (string, error) {
+func CheckAuth(api *Api, r *http.Request) (string, error) {
 	sidCookie, err := r.Cookie("sid")
 	if err != nil {
 		return "", nil
@@ -42,17 +43,23 @@ func CheckAuth(api *Api, r *http.Request, w http.ResponseWriter) (string, error)
 	return "", nil
 }
 
-func ensureLogin(api *Api, writer http.ResponseWriter, request *http.Request) (string, bool) {
-	nickname, err := CheckAuth(api, request, writer)
+func ensureLogin(api *Api, writer http.ResponseWriter, request *http.Request) *models.User {
+	nickname, err := CheckAuth(api, request)
 	if err != nil {
 		log.Println("Can not index: " + err.Error())
 		writer.WriteHeader(400)
-		return "", false
+		return nil
 	}
 	if nickname == "" {
 		log.Println("Wrong cookie")
 		writer.WriteHeader(400)
-		return "", false
+		return nil
 	}
-	return nickname, true
+	user, err := api.GetUserByNickname(nickname)
+	if err != nil {
+		log.Println("Can not get user: " + err.Error())
+		writer.WriteHeader(400)
+		return nil
+	}
+	return user
 }

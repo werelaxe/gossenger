@@ -24,3 +24,13 @@ func RandStringRunes(n int) string {
 	}
 	return string(b)
 }
+
+func unique(slice []uint) map[uint]bool {
+	keys := make(map[uint]bool)
+	for _, entry := range slice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+		}
+	}
+	return keys
+}
