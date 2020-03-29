@@ -185,3 +185,11 @@ func (api *Api) ListMessages(chatId int64) ([]models.Message, error) {
 	}
 	return messages, nil
 }
+
+func (api *Api) ListUsers() (*[]models.User, error) {
+	var users []models.User
+	if err := api.Db.Find(&users).Error; err != nil {
+		return nil, errors.New("can not list users: " + err.Error())
+	}
+	return &users, nil
+}
