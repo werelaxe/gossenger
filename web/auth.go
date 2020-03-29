@@ -1,9 +1,11 @@
-package main
+package web
 
 import (
 	"encoding/base64"
 	"log"
+	"messenger/dbapi"
 	"messenger/models"
+	"messenger/utils"
 	"net/http"
 )
 
@@ -16,7 +18,7 @@ func redirect(writer http.ResponseWriter, request *http.Request, path string) {
 func Auth(nickname string, w http.ResponseWriter, salt string) error {
 	cookie := http.Cookie{
 		Name:  "sid",
-		Value: base64.StdEncoding.EncodeToString(Hash(nickname + salt)),
+		Value: base64.StdEncoding.EncodeToString(utils.Hash(nickname + salt)),
 	}
 	http.SetCookie(w, &cookie)
 	http.SetCookie(w, &http.Cookie{
@@ -26,7 +28,7 @@ func Auth(nickname string, w http.ResponseWriter, salt string) error {
 	return nil
 }
 
-func CheckAuth(api *Api, r *http.Request) (string, error) {
+func CheckAuth(api *dbapi.Api, r *http.Request) (string, error) {
 	sidCookie, err := r.Cookie("sid")
 	if err != nil {
 		return "", nil
@@ -35,15 +37,15 @@ func CheckAuth(api *Api, r *http.Request) (string, error) {
 	if err != nil {
 		return "", nil
 	}
-	salt := api.redis.Get(nicknameCookie.Value)
+	salt := api.Redis.Get(nicknameCookie.Value)
 	con := nicknameCookie.Value + salt.Val()
-	if base64.StdEncoding.EncodeToString(Hash(con)) == sidCookie.Value {
+	if base64.StdEncoding.EncodeToString(utils.Hash(con)) == sidCookie.Value {
 		return nicknameCookie.Value, nil
 	}
 	return "", nil
 }
 
-func ensureLogin(api *Api, writer http.ResponseWriter, request *http.Request) *models.User {
+func EnsureLogin(api *dbapi.Api, writer http.ResponseWriter, request *http.Request) *models.User {
 	nickname, err := CheckAuth(api, request)
 	if err != nil {
 		log.Println("Can not index: " + err.Error())

@@ -5,18 +5,10 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"log"
-	"messenger/models"
+	"messenger/dbapi"
+	"messenger/web"
 	"net/http"
 )
-
-func get(name string) *models.User {
-	return &models.User{
-		Nickname:     name,
-		FirstName:    name,
-		LastName:     name,
-		PasswordHash: Hash(name),
-	}
-}
 
 func main() {
 	db, err := gorm.Open("postgres", "host=localhost port=5432 user=postgres dbname=messenger password=password sslmode=disable")
@@ -30,18 +22,18 @@ func main() {
 		DB:       0,  // use default DB
 	})
 
-	api := Api{
-		db:    db,
-		redis: client,
+	api := dbapi.Api{
+		Db:    db,
+		Redis: client,
 	}
 
 	api.Init()
 
-	http.HandleFunc("/register", registerHandler(&api))
-	http.HandleFunc("/login", loginHandler(&api))
-	http.HandleFunc("/chats/create", createChatHandler(&api))
-	http.HandleFunc("/chats/add_user", addUserToChatHandler(&api))
-	http.HandleFunc("/", indexHandler(&api))
+	http.HandleFunc("/register", web.RegisterHandler(&api))
+	http.HandleFunc("/login", web.LoginHandler(&api))
+	http.HandleFunc("/chats/create", web.CreateChatHandler(&api))
+	http.HandleFunc("/chats/add_user", web.AddUserToChatHandler(&api))
+	http.HandleFunc("/", web.IndexHandler(&api))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

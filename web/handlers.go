@@ -1,17 +1,20 @@
-package main
+package web
 
 import (
 	"encoding/json"
 	"log"
+	"messenger/dbapi"
 	"messenger/models"
+	"messenger/utils"
 	"net/http"
 )
 
 type HandlerFuncType func(writer http.ResponseWriter, request *http.Request)
 
-func registerHandler(api *Api) HandlerFuncType {
+func RegisterHandler(api *dbapi.Api) HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		if request.Method != http.MethodPost {
+			log.Println("Wrong method (should be POST)")
 			writer.WriteHeader(400)
 			return
 		}
@@ -43,9 +46,9 @@ func registerHandler(api *Api) HandlerFuncType {
 	}
 }
 
-func indexHandler(api *Api) HandlerFuncType {
+func IndexHandler(api *dbapi.Api) HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := ensureLogin(api, writer, request)
+		user := EnsureLogin(api, writer, request)
 		if user == nil {
 			return
 		}
@@ -59,7 +62,7 @@ func indexHandler(api *Api) HandlerFuncType {
 	}
 }
 
-func loginHandler(api *Api) HandlerFuncType {
+func LoginHandler(api *dbapi.Api) HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		if request.Method != http.MethodPost {
 			writer.WriteHeader(400)
@@ -99,9 +102,9 @@ func loginHandler(api *Api) HandlerFuncType {
 	}
 }
 
-func createChatHandler(api *Api) HandlerFuncType {
+func CreateChatHandler(api *dbapi.Api) HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := ensureLogin(api, writer, request)
+		user := EnsureLogin(api, writer, request)
 		if user == nil {
 			return
 		}
@@ -115,7 +118,7 @@ func createChatHandler(api *Api) HandlerFuncType {
 
 		var users []*models.User
 
-		for memberId, _ := range unique(createChatData.Members) {
+		for memberId, _ := range utils.Unique(createChatData.Members) {
 			member, err := api.GetUserById(memberId)
 			if err != nil {
 				log.Println("Can not create chat: " + err.Error())
@@ -133,9 +136,9 @@ func createChatHandler(api *Api) HandlerFuncType {
 	}
 }
 
-func addUserToChatHandler(api *Api) HandlerFuncType {
+func AddUserToChatHandler(api *dbapi.Api) HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := ensureLogin(api, writer, request)
+		user := EnsureLogin(api, writer, request)
 		if user == nil {
 			return
 		}
@@ -168,7 +171,7 @@ func addUserToChatHandler(api *Api) HandlerFuncType {
 			return
 		}
 
-		uniqueUserIds := getUniqueUserIds(users)
+		uniqueUserIds := dbapi.GetUniqueUserIds(users)
 
 		if _, ok := uniqueUserIds[user.ID]; !ok {
 			log.Println("Can add user to chat: logged user must be in chat")

@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"crypto/md5"
@@ -11,7 +11,7 @@ func Hash(str string) []byte {
 	return hash[:]
 }
 
-func initRandom() {
+func InitRandom() {
 	rand.Seed(time.Now().UnixNano())
 }
 
@@ -25,7 +25,7 @@ func RandStringRunes(n int) string {
 	return string(b)
 }
 
-func unique(slice []uint) map[uint]bool {
+func Unique(slice []uint) map[uint]bool {
 	keys := make(map[uint]bool)
 	for _, entry := range slice {
 		if _, value := keys[entry]; !value {
