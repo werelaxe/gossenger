@@ -1,24 +1,24 @@
 package models
 
 type RegisterUserSchema struct {
-	Password  string `requestsJson:"password"`
-	Nickname  string `requestsJson:"nickname"`
-	FirstName string `requestsJson:"first_name"`
-	LastName  string `requestsJson:"last_name"`
+	Password  string `json:"password"`
+	Nickname  string `json:"nickname"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 type LoginUserSchema struct {
-	Password string `requestsJson:"password"`
-	Nickname string `requestsJson:"nickname"`
+	Password string `json:"password"`
+	Nickname string `json:"nickname"`
 }
 
 type CreateChatSchema struct {
-	Title   string `requestsJson:"title"`
-	AdminId uint   `requestsJson:"admin_id"`
-	Members []uint `requestsJson:"members"`
+	Title   string `json:"title"`
+	AdminId uint   `json:"admin_id"`
+	Members []uint `json:"members"`
 }
 
 type AddUserToChatSchema struct {
-	UserId uint `requestsJson:"user_id"`
-	ChatId uint `requestsJson:"chat_id"`
+	UserId uint `json:"user_id"`
+	ChatId uint `json:"chat_id"`
 }
