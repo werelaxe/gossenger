@@ -35,8 +35,11 @@ func main() {
 
 	http.HandleFunc("/chats/create", web.CreateChatHandler(&api))
 	http.HandleFunc("/chats/add_user", web.AddUserToChatHandler(&api))
+	http.HandleFunc("/chats/list", web.ListUserChatsHandler(&api))
+	http.HandleFunc("/chats/list_members", web.ListChatMembersHandler(&api))
 
 	http.HandleFunc("/messages/send", web.SendMessageHandler(&api))
+	http.HandleFunc("/messages/list", web.ListMessagesHandler(&api))
 
 	http.HandleFunc("/", web.IndexHandler(&api))
 

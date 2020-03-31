@@ -15,7 +15,7 @@ func LoginHandler(api *dbapi.Api) HandlerFuncType {
 			return
 		}
 
-		var loginUserData models.LoginUserSchema
+		var loginUserData models.LoginUserRequestSchema
 		if err := json.NewDecoder(request.Body).Decode(&loginUserData); err != nil {
 			if e, ok := err.(*json.SyntaxError); ok {
 				log.Printf("syntax error at byte offset %d", e.Offset)

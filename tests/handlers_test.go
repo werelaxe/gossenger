@@ -121,8 +121,8 @@ func TestRegistrationAndLogin(t *testing.T) {
 	}
 }
 
-func getUserData(name string) *models.RegisterUserSchema {
-	return &models.RegisterUserSchema{
+func getUserData(name string) *models.RegisterUserRequestSchema {
+	return &models.RegisterUserRequestSchema{
 		Nickname:  name,
 		FirstName: name,
 		LastName:  name,
@@ -132,7 +132,7 @@ func getUserData(name string) *models.RegisterUserSchema {
 
 func createChatInTestEnv(t *testing.T, api *dbapi.Api) []*http.Cookie {
 	userA, userB, userC := getUserData("a"), getUserData("b"), getUserData("c")
-	usersToRegister := []*models.RegisterUserSchema{userA, userB, userC}
+	usersToRegister := []*models.RegisterUserRequestSchema{userA, userB, userC}
 
 	var adminCookies []*http.Cookie
 	for _, user := range usersToRegister {

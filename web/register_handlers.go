@@ -16,7 +16,7 @@ func RegisterHandler(api *dbapi.Api) HandlerFuncType {
 			return
 		}
 
-		var registerUserData models.RegisterUserSchema
+		var registerUserData models.RegisterUserRequestSchema
 		decoder := json.NewDecoder(request.Body)
 
 		if err := decoder.Decode(&registerUserData); err != nil {

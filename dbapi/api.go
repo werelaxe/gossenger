@@ -178,7 +178,7 @@ func (api *Api) SendMessage(messageText string, senderId, chatId uint) error {
 	return nil
 }
 
-func (api *Api) ListMessages(chatId int64) ([]models.Message, error) {
+func (api *Api) ListMessages(chatId uint) ([]models.Message, error) {
 	var messages []models.Message
 	if err := api.Db.Find(&messages, "chat_refer = ?", chatId).Error; err != nil {
 		return nil, errors.New("can not list messages: " + err.Error())
