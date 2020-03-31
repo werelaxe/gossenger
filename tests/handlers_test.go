@@ -206,19 +206,72 @@ func TestAddingUserToChat(t *testing.T) {
 	handler.ServeHTTP(addUserToChatResponseRecorder, addUserToChatRequest)
 
 	if addUserToChatResponseRecorder.Code != http.StatusOK {
-		t.Errorf("Create chat handler returned unexpected status: %v", addUserToChatResponseRecorder.Code)
+		t.Errorf("Adding user to chat handler returned unexpected status: %v", addUserToChatResponseRecorder.Code)
 	}
 
 	chat, err := api.GetChat(1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	members, err := api.ListChatMembers(chat)
+	actualMembers, err := api.ListChatMembers(chat)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(members) != 4 {
-		t.Errorf("Wrong count of members: %v", len(members))
+	if len(actualMembers) != 4 {
+		t.Errorf("Wrong count of actualMembers: %v", len(actualMembers))
+	}
+
+	expectedMemberNames := []string{"a", "b", "c", "newuser"}
+
+	for i := 0; i < len(actualMembers); i++ {
+		if actualMembers[i].LastName != actualMembers[i].FirstName ||
+			actualMembers[i].FirstName != actualMembers[i].Nickname ||
+			actualMembers[i].Nickname != expectedMemberNames[i] {
+			t.Fatalf("Wrong member with index %v: actual %v, expected name: %v", i, actualMembers[i], expectedMemberNames[i])
+		}
+	}
+}
+
+func TestSendingMessage(t *testing.T) {
+	api := getTestApi()
+	defer api.Close()
+
+	adminCookies := createChatInTestEnv(t, api)
+
+	sendMessageRequestContent, err := ioutil.ReadFile("requests/send_message.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sendMessageRequest, err := http.NewRequest(http.MethodPost, "/messages/send", bytes.NewReader(sendMessageRequestContent))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	addAllCookies(adminCookies, sendMessageRequest)
+
+	handler := http.HandlerFunc(web.SendMessageHandler(api))
+
+	sendMessageResponseRecorder := httptest.NewRecorder()
+	handler.ServeHTTP(sendMessageResponseRecorder, sendMessageRequest)
+
+	if sendMessageResponseRecorder.Code != http.StatusOK {
+		t.Errorf("Sending message handler returned unexpected status: %v", sendMessageResponseRecorder.Code)
+	}
+
+	messages, err := api.ListMessages(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(messages) != 1 {
+		t.Errorf("Wrong number of messages: %v", len(messages))
+	}
+
+	expectedText := "Hello there folks!"
+
+	if messages[0].Text != expectedText {
+		t.Errorf("Wrong message text: expected %v, actual message: %v", expectedText, messages[0].Text)
 	}
 }

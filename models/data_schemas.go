@@ -22,3 +22,8 @@ type AddUserToChatSchema struct {
 	UserId uint `json:"user_id"`
 	ChatId uint `json:"chat_id"`
 }
+
+type SendMessageSchema struct {
+	ChatId uint   `json:"chat_id"`
+	Text   string `json:"text"`
+}

@@ -145,28 +145,28 @@ func AddUserToChatHandler(api *dbapi.Api) HandlerFuncType {
 
 		var addUserToChatData models.AddUserToChatSchema
 		if err := json.NewDecoder(request.Body).Decode(&addUserToChatData); err != nil {
-			log.Println("Can add user to chat: " + err.Error())
+			log.Println("Can not add user to chat: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
 
 		newMember, err := api.GetUserById(addUserToChatData.UserId)
 		if err != nil {
-			log.Println("Can add user to chat: " + err.Error())
+			log.Println("Can not add user to chat: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
 
 		chat, err := api.GetChat(addUserToChatData.ChatId)
 		if err != nil {
-			log.Println("Can add user to chat: " + err.Error())
+			log.Println("Can not add user to chat: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
 
 		users, err := api.ListChatMembers(chat)
 		if err != nil {
-			log.Println("Can add user to chat: " + err.Error())
+			log.Println("Can not add user to chat: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
@@ -174,19 +174,41 @@ func AddUserToChatHandler(api *dbapi.Api) HandlerFuncType {
 		uniqueUserIds := dbapi.GetUniqueUserIds(users)
 
 		if _, ok := uniqueUserIds[user.ID]; !ok {
-			log.Println("Can add user to chat: logged user must be in chat")
+			log.Println("Can not add user to chat: logged user must be in chat")
 			writer.WriteHeader(400)
 			return
 		}
 
 		if _, ok := uniqueUserIds[newMember.ID]; ok {
-			log.Println("Can add user to chat: user is already in chat")
+			log.Println("Can not add user to chat: user is already in chat")
 			writer.WriteHeader(400)
 			return
 		}
 
 		if err = api.AddUserToChat(newMember, chat); err != nil {
-			log.Println("Can add user to chat: " + err.Error())
+			log.Println("Can not add user to chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+	}
+}
+
+func SendMessageHandler(api *dbapi.Api) HandlerFuncType {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		user := EnsureLogin(api, writer, request)
+		if user == nil {
+			return
+		}
+
+		var sendMessageData models.SendMessageSchema
+		if err := json.NewDecoder(request.Body).Decode(&sendMessageData); err != nil {
+			log.Println("Can not send message: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		if err := api.SendMessage(sendMessageData.Text, user.ID, sendMessageData.ChatId); err != nil {
+			log.Println("Can not send message: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}

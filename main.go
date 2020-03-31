@@ -30,9 +30,14 @@ func main() {
 	api.Init()
 
 	http.HandleFunc("/register", web.RegisterHandler(&api))
+
 	http.HandleFunc("/login", web.LoginHandler(&api))
+
 	http.HandleFunc("/chats/create", web.CreateChatHandler(&api))
 	http.HandleFunc("/chats/add_user", web.AddUserToChatHandler(&api))
+
+	http.HandleFunc("/messages/send", web.SendMessageHandler(&api))
+
 	http.HandleFunc("/", web.IndexHandler(&api))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
