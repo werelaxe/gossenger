@@ -1,8 +1,8 @@
 function initLoginPage() {
-    let loginButton = $("#lgn-btn");
+    let loginButton = $("#login-btn");
     loginButton.on("click", function () {
-        let nickname = $("#usnm").val();
-        let password = $("#pswd").val();
+        let nickname = $("#username-inp").val();
+        let password = $("#password-inp").val();
 
         let loginReq = JSON.stringify({
             "nickname": nickname,

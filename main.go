@@ -19,8 +19,8 @@ func main() {
 	defer db.Close()
 	client := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Password: "",
+		DB:       0,
 	})
 
 	api := dbapi.Api{
@@ -48,6 +48,7 @@ func main() {
 	http.HandleFunc("/messages/list", backend.ListMessagesHandler(&api))
 
 	http.HandleFunc("/login_page", frontend.LoginPageHandler(&api, &templateManager))
+	http.HandleFunc("/register_page", frontend.RegisterPageHandler(&api, &templateManager))
 	http.HandleFunc("/", frontend.IndexHandler(&api, &templateManager))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
