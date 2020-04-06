@@ -48,7 +48,7 @@ func main() {
 	http.HandleFunc("/messages/list", backend.ListMessagesHandler(&api))
 
 	http.HandleFunc("/login_page", frontend.LoginPageHandler(&api, &templateManager))
-	http.HandleFunc("/", frontend.IndexHandler(&api))
+	http.HandleFunc("/", frontend.IndexHandler(&api, &templateManager))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

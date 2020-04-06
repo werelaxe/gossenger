@@ -13,6 +13,7 @@ func SendMessageHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		user := EnsureLogin(api, writer, request)
 		if user == nil {
+			writer.WriteHeader(400)
 			return
 		}
 
@@ -35,6 +36,7 @@ func ListMessagesHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		user := EnsureLogin(api, writer, request)
 		if user == nil {
+			writer.WriteHeader(400)
 			return
 		}
 

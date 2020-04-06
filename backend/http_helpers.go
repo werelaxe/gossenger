@@ -10,7 +10,7 @@ import (
 )
 
 func Redirect(writer http.ResponseWriter, path string) {
-	if _, err := writer.Write([]byte("<script>" + path + "</script>")); err != nil {
+	if _, err := writer.Write([]byte("<script>location.href = \"" + path + "\"</script>")); err != nil {
 		log.Println("Can not redirect: " + err.Error())
 	}
 }
@@ -49,18 +49,15 @@ func EnsureLogin(api *dbapi.Api, writer http.ResponseWriter, request *http.Reque
 	nickname, err := CheckAuth(api, request)
 	if err != nil {
 		log.Println("Can not index: " + err.Error())
-		writer.WriteHeader(400)
 		return nil
 	}
 	if nickname == "" {
 		log.Println("Wrong cookie")
-		writer.WriteHeader(400)
 		return nil
 	}
 	user, err := api.GetUserByNickname(nickname)
 	if err != nil {
 		log.Println("Can not get user: " + err.Error())
-		writer.WriteHeader(400)
 		return nil
 	}
 	return user
