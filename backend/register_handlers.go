@@ -1,14 +1,15 @@
-package web
+package backend
 
 import (
 	"encoding/json"
 	"log"
+	"messenger/common"
 	"messenger/dbapi"
 	"messenger/models"
 	"net/http"
 )
 
-func RegisterHandler(api *dbapi.Api) HandlerFuncType {
+func RegisterHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		if request.Method != http.MethodPost {
 			log.Println("Wrong method (should be POST)")

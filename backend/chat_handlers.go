@@ -1,15 +1,15 @@
-package web
+package backend
 
 import (
 	"encoding/json"
 	"log"
+	"messenger/common"
 	"messenger/dbapi"
 	"messenger/models"
-	"messenger/utils"
 	"net/http"
 )
 
-func CreateChatHandler(api *dbapi.Api) HandlerFuncType {
+func CreateChatHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		user := EnsureLogin(api, writer, request)
 		if user == nil {
@@ -25,7 +25,7 @@ func CreateChatHandler(api *dbapi.Api) HandlerFuncType {
 
 		var users []*models.User
 
-		for memberId := range utils.Unique(createChatData.Members) {
+		for memberId := range common.Unique(createChatData.Members) {
 			member, err := api.GetUserById(memberId)
 			if err != nil {
 				log.Println("Can not create chat: " + err.Error())
@@ -43,7 +43,7 @@ func CreateChatHandler(api *dbapi.Api) HandlerFuncType {
 	}
 }
 
-func AddUserToChatHandler(api *dbapi.Api) HandlerFuncType {
+func AddUserToChatHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		user := EnsureLogin(api, writer, request)
 		if user == nil {
@@ -100,7 +100,7 @@ func AddUserToChatHandler(api *dbapi.Api) HandlerFuncType {
 	}
 }
 
-func ListUserChatsHandler(api *dbapi.Api) HandlerFuncType {
+func ListUserChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		user := EnsureLogin(api, writer, request)
 		if user == nil {
@@ -138,7 +138,7 @@ func ListUserChatsHandler(api *dbapi.Api) HandlerFuncType {
 	}
 }
 
-func ListChatMembersHandler(api *dbapi.Api) HandlerFuncType {
+func ListChatMembersHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		user := EnsureLogin(api, writer, request)
 		if user == nil {

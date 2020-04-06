@@ -6,8 +6,8 @@ import (
 	"errors"
 	"github.com/go-redis/redis"
 	"github.com/jinzhu/gorm"
+	"messenger/common"
 	"messenger/models"
-	"messenger/utils"
 	"time"
 )
 
@@ -17,7 +17,7 @@ type Api struct {
 }
 
 func (api *Api) Init() {
-	utils.InitRandom()
+	common.InitRandom()
 	if result := api.Db.AutoMigrate(&models.User{}, &models.Message{}, &models.Chat{}); result.Error != nil {
 		panic(result.Error)
 	}
@@ -33,7 +33,7 @@ func (api *Api) RegisterUser(nickname, firstName, lastName, password string) err
 		Nickname:     nickname,
 		FirstName:    firstName,
 		LastName:     lastName,
-		PasswordHash: utils.Hash(password),
+		PasswordHash: common.Hash(password),
 	})
 	if result.Error != nil {
 		return result.Error
@@ -47,11 +47,11 @@ func (api *Api) IsValidPair(nickname, password string) (bool, error) {
 	if err := api.Db.Where("nickname = ?", nickname).First(&user).Error; err != nil {
 		return false, err
 	}
-	return bytes.Equal(user.PasswordHash, utils.Hash(password)), nil
+	return bytes.Equal(user.PasswordHash, common.Hash(password)), nil
 }
 
 func (api *Api) CreateSession(nickname string) string {
-	salt := utils.RandStringRunes(20)
+	salt := common.RandStringRunes(20)
 	api.Redis.Set(nickname, salt, time.Second*600)
 	return salt
 }
@@ -59,7 +59,7 @@ func (api *Api) CreateSession(nickname string) string {
 func (api *Api) ValidateSession(nickname, sid string) bool {
 	salt := api.Redis.Get(nickname)
 	con := nickname + salt.Val()
-	if base64.StdEncoding.EncodeToString(utils.Hash(con)) == sid {
+	if base64.StdEncoding.EncodeToString(common.Hash(con)) == sid {
 		return false
 	}
 	return true
@@ -94,7 +94,7 @@ func GetUniqueUserIds(users []*models.User) map[uint]bool {
 	for _, v := range users {
 		userIds = append(userIds, v.ID)
 	}
-	return utils.Unique(userIds)
+	return common.Unique(userIds)
 }
 
 func (api *Api) CreateChat(title string, admin *models.User, users []*models.User) error {

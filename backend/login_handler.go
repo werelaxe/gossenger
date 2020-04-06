@@ -1,14 +1,15 @@
-package web
+package backend
 
 import (
 	"encoding/json"
 	"log"
+	"messenger/common"
 	"messenger/dbapi"
 	"messenger/models"
 	"net/http"
 )
 
-func LoginHandler(api *dbapi.Api) HandlerFuncType {
+func LoginHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		if request.Method != http.MethodPost {
 			writer.WriteHeader(400)

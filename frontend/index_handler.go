@@ -1,14 +1,16 @@
-package web
+package frontend
 
 import (
 	"log"
+	"messenger/backend"
+	"messenger/common"
 	"messenger/dbapi"
 	"net/http"
 )
 
-func IndexHandler(api *dbapi.Api) HandlerFuncType {
+func IndexHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := EnsureLogin(api, writer, request)
+		user := backend.EnsureLogin(api, writer, request)
 		if user == nil {
 			return
 		}

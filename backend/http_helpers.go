@@ -1,15 +1,15 @@
-package web
+package backend
 
 import (
 	"encoding/base64"
 	"log"
+	"messenger/common"
 	"messenger/dbapi"
 	"messenger/models"
-	"messenger/utils"
 	"net/http"
 )
 
-func redirect(writer http.ResponseWriter, request *http.Request, path string) {
+func Redirect(writer http.ResponseWriter, path string) {
 	if _, err := writer.Write([]byte("<script>" + path + "</script>")); err != nil {
 		log.Println("Can not redirect: " + err.Error())
 	}
@@ -18,7 +18,7 @@ func redirect(writer http.ResponseWriter, request *http.Request, path string) {
 func Auth(nickname string, w http.ResponseWriter, salt string) error {
 	cookie := http.Cookie{
 		Name:  "sid",
-		Value: base64.StdEncoding.EncodeToString(utils.Hash(nickname + salt)),
+		Value: base64.StdEncoding.EncodeToString(common.Hash(nickname + salt)),
 	}
 	http.SetCookie(w, &cookie)
 	http.SetCookie(w, &http.Cookie{
@@ -39,7 +39,7 @@ func CheckAuth(api *dbapi.Api, r *http.Request) (string, error) {
 	}
 	salt := api.Redis.Get(nicknameCookie.Value)
 	con := nicknameCookie.Value + salt.Val()
-	if base64.StdEncoding.EncodeToString(utils.Hash(con)) == sidCookie.Value {
+	if base64.StdEncoding.EncodeToString(common.Hash(con)) == sidCookie.Value {
 		return nicknameCookie.Value, nil
 	}
 	return "", nil

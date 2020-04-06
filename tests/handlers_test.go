@@ -7,9 +7,10 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"io/ioutil"
+	"messenger/backend"
 	"messenger/dbapi"
+	"messenger/frontend"
 	"messenger/models"
-	"messenger/web"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -56,7 +57,7 @@ func registerInTestEnv(t *testing.T, api *dbapi.Api, content []byte) []*http.Coo
 	}
 
 	registrationResponseRecorder := httptest.NewRecorder()
-	registerTestHandler := http.HandlerFunc(web.RegisterHandler(api))
+	registerTestHandler := http.HandlerFunc(backend.RegisterHandler(api))
 
 	registerTestHandler.ServeHTTP(registrationResponseRecorder, registrationRequest)
 
@@ -87,7 +88,7 @@ func TestRegistration(t *testing.T) {
 	addAllCookies(cookies, indexRequest)
 
 	indexResponseRecorder := httptest.NewRecorder()
-	indexTestHandler := http.HandlerFunc(web.IndexHandler(api))
+	indexTestHandler := http.HandlerFunc(frontend.IndexHandler(api))
 	indexTestHandler.ServeHTTP(indexResponseRecorder, indexRequest)
 
 	if indexResponseRecorder.Code != http.StatusOK {
@@ -111,7 +112,7 @@ func TestRegistrationAndLogin(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	handler := http.HandlerFunc(web.LoginHandler(api))
+	handler := http.HandlerFunc(backend.LoginHandler(api))
 
 	loginResponseRecorder := httptest.NewRecorder()
 	handler.ServeHTTP(loginResponseRecorder, loginRequest)
@@ -155,7 +156,7 @@ func createChatInTestEnv(t *testing.T, api *dbapi.Api) []*http.Cookie {
 
 	addAllCookies(adminCookies, createChatRequest)
 
-	handler := http.HandlerFunc(web.CreateChatHandler(api))
+	handler := http.HandlerFunc(backend.CreateChatHandler(api))
 
 	createChatResponseRecorder := httptest.NewRecorder()
 	handler.ServeHTTP(createChatResponseRecorder, createChatRequest)
@@ -200,7 +201,7 @@ func TestAddingUserToChat(t *testing.T) {
 
 	addAllCookies(adminCookies, addUserToChatRequest)
 
-	handler := http.HandlerFunc(web.AddUserToChatHandler(api))
+	handler := http.HandlerFunc(backend.AddUserToChatHandler(api))
 
 	addUserToChatResponseRecorder := httptest.NewRecorder()
 	handler.ServeHTTP(addUserToChatResponseRecorder, addUserToChatRequest)
@@ -251,7 +252,7 @@ func TestSendingMessage(t *testing.T) {
 
 	addAllCookies(adminCookies, sendMessageRequest)
 
-	handler := http.HandlerFunc(web.SendMessageHandler(api))
+	handler := http.HandlerFunc(backend.SendMessageHandler(api))
 
 	sendMessageResponseRecorder := httptest.NewRecorder()
 	handler.ServeHTTP(sendMessageResponseRecorder, sendMessageRequest)

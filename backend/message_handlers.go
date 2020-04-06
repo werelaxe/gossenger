@@ -1,14 +1,15 @@
-package web
+package backend
 
 import (
 	"encoding/json"
 	"log"
+	"messenger/common"
 	"messenger/dbapi"
 	"messenger/models"
 	"net/http"
 )
 
-func SendMessageHandler(api *dbapi.Api) HandlerFuncType {
+func SendMessageHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		user := EnsureLogin(api, writer, request)
 		if user == nil {
@@ -30,7 +31,7 @@ func SendMessageHandler(api *dbapi.Api) HandlerFuncType {
 	}
 }
 
-func ListMessagesHandler(api *dbapi.Api) HandlerFuncType {
+func ListMessagesHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		user := EnsureLogin(api, writer, request)
 		if user == nil {

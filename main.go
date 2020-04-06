@@ -5,8 +5,9 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"log"
+	"messenger/backend"
 	"messenger/dbapi"
-	"messenger/web"
+	"messenger/frontend"
 	"net/http"
 )
 
@@ -28,20 +29,26 @@ func main() {
 	}
 
 	api.Init()
+	var templateManager frontend.TemplateManager
+	templateManager.Init("frontend/templates")
 
-	http.HandleFunc("/register", web.RegisterHandler(&api))
+	fs := http.FileServer(http.Dir("./frontend/static/"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	http.HandleFunc("/login", web.LoginHandler(&api))
+	http.HandleFunc("/register", backend.RegisterHandler(&api))
 
-	http.HandleFunc("/chats/create", web.CreateChatHandler(&api))
-	http.HandleFunc("/chats/add_user", web.AddUserToChatHandler(&api))
-	http.HandleFunc("/chats/list", web.ListUserChatsHandler(&api))
-	http.HandleFunc("/chats/list_members", web.ListChatMembersHandler(&api))
+	http.HandleFunc("/login", backend.LoginHandler(&api))
 
-	http.HandleFunc("/messages/send", web.SendMessageHandler(&api))
-	http.HandleFunc("/messages/list", web.ListMessagesHandler(&api))
+	http.HandleFunc("/chats/create", backend.CreateChatHandler(&api))
+	http.HandleFunc("/chats/add_user", backend.AddUserToChatHandler(&api))
+	http.HandleFunc("/chats/list", backend.ListUserChatsHandler(&api))
+	http.HandleFunc("/chats/list_members", backend.ListChatMembersHandler(&api))
 
-	http.HandleFunc("/", web.IndexHandler(&api))
+	http.HandleFunc("/messages/send", backend.SendMessageHandler(&api))
+	http.HandleFunc("/messages/list", backend.ListMessagesHandler(&api))
+
+	http.HandleFunc("/login_page", frontend.LoginPageHandler(&api, &templateManager))
+	http.HandleFunc("/", frontend.IndexHandler(&api))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
