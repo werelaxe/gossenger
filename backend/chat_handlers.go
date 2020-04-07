@@ -11,7 +11,7 @@ import (
 
 func CreateChatHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := EnsureLogin(api, writer, request)
+		user := EnsureLogin(api, request)
 		if user == nil {
 			writer.WriteHeader(400)
 			return
@@ -46,7 +46,7 @@ func CreateChatHandler(api *dbapi.Api) common.HandlerFuncType {
 
 func AddUserToChatHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := EnsureLogin(api, writer, request)
+		user := EnsureLogin(api, request)
 		if user == nil {
 			writer.WriteHeader(400)
 			return
@@ -104,7 +104,7 @@ func AddUserToChatHandler(api *dbapi.Api) common.HandlerFuncType {
 
 func ListUserChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := EnsureLogin(api, writer, request)
+		user := EnsureLogin(api, request)
 		if user == nil {
 			writer.WriteHeader(400)
 			return
@@ -143,7 +143,7 @@ func ListUserChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 
 func ListChatMembersHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := EnsureLogin(api, writer, request)
+		user := EnsureLogin(api, request)
 		if user == nil {
 			writer.WriteHeader(400)
 			return

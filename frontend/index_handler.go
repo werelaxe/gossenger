@@ -16,7 +16,7 @@ type userPageSchema struct {
 
 func IndexHandler(api *dbapi.Api, templateManager *TemplateManager) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := backend.EnsureLogin(api, writer, request)
+		user := backend.EnsureLogin(api, request)
 		if user == nil {
 			backend.Redirect(writer, "/login_page")
 			return

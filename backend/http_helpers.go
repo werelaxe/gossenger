@@ -45,7 +45,7 @@ func CheckAuth(api *dbapi.Api, r *http.Request) (string, error) {
 	return "", nil
 }
 
-func EnsureLogin(api *dbapi.Api, writer http.ResponseWriter, request *http.Request) *models.User {
+func EnsureLogin(api *dbapi.Api, request *http.Request) *models.User {
 	nickname, err := CheckAuth(api, request)
 	if err != nil {
 		log.Println("Can not index: " + err.Error())
