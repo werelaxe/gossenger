@@ -1,3 +1,35 @@
+let ws = null;
+let activeChatId = null;
+
+
+function waitSocket(socket, callback) {
+    setTimeout(
+        function () {
+            let done = false;
+            if (socket) {
+                if (socket.readyState === 1) {
+                    callback();
+                    done = true;
+                }
+            }
+            if (!done) {
+                waitSocket(socket, callback);
+            }
+        },
+        5);
+}
+
+
+function setMessagesReceivingHandler() {
+    ws.onmessage = function (e) {
+        const message = JSON.parse(e.data);
+        if (activeChatId === message["chat_id"]) {
+            addMessage(message["text"], message["sender_id"], message["time"]);
+        }
+    }
+}
+
+
 function clearCookies() {
     const cookies = document.cookie.split(";");
     for (let i = 0; i < cookies.length; i++) {
@@ -27,6 +59,8 @@ function activateChat(id) {
     sendButton.on("click", function () {
         sendMessage(id, $("#message-inp").val());
     });
+
+    activeChatId = id;
 }
 
 
@@ -105,9 +139,10 @@ function setIndexPageHandlers() {
 
 
 function initIndexPage() {
+    hideSender();
     setIndexPageHandlers();
     loadChats();
-    hideSender();
+    setMessagesReceivingHandler();
 }
 
 
@@ -122,5 +157,6 @@ function showSender() {
 
 
 $(document).ready(function() {
-    initIndexPage();
+    ws = new WebSocket("ws://" + location.host + "/messages_ws");
+    waitSocket(ws, initIndexPage);
 });
