@@ -6,8 +6,8 @@ import (
 	"errors"
 	"github.com/go-redis/redis"
 	"github.com/jinzhu/gorm"
-	"messenger/common"
-	"messenger/models"
+	"gossenger/common"
+	"gossenger/models"
 	"time"
 )
 

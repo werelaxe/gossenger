@@ -2,10 +2,10 @@ package backend
 
 import (
 	"encoding/json"
+	"gossenger/common"
+	"gossenger/dbapi"
+	"gossenger/models"
 	"log"
-	"messenger/common"
-	"messenger/dbapi"
-	"messenger/models"
 	"net/http"
 )
 

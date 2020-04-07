@@ -4,10 +4,10 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"gossenger/backend"
+	"gossenger/dbapi"
+	"gossenger/frontend"
 	"log"
-	"messenger/backend"
-	"messenger/dbapi"
-	"messenger/frontend"
 	"net/http"
 )
 
