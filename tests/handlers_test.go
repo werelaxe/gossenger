@@ -87,8 +87,11 @@ func TestRegistration(t *testing.T) {
 
 	addAllCookies(cookies, indexRequest)
 
+	var templateManager frontend.TemplateManager
+	templateManager.Init("../frontend/templates")
+
 	indexResponseRecorder := httptest.NewRecorder()
-	indexTestHandler := http.HandlerFunc(frontend.IndexHandler(api))
+	indexTestHandler := http.HandlerFunc(frontend.IndexHandler(api, &templateManager))
 	indexTestHandler.ServeHTTP(indexResponseRecorder, indexRequest)
 
 	if indexResponseRecorder.Code != http.StatusOK {
