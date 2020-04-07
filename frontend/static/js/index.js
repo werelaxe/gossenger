@@ -18,9 +18,32 @@ function activateChat(id) {
     const chat = getChat(id);
     console.log("Make chat '" + chat.text() + "' active");
     $("#chat-caption").text(chat.text() + ":");
+    clearMessages();
     loadMessages(id);
+    showSender();
+
+    let sendButton = $("#send-btn");
+    sendButton.unbind("click");
+    sendButton.on("click", function () {
+        sendMessage(id, $("#message-inp").val());
+    });
 }
 
+
+function sendMessage(chatId, text) {
+    const sendMessageReq = JSON.stringify({
+        "chat_id": chatId,
+        "text": text
+    });
+
+    $.post("/messages/send", sendMessageReq)
+        .fail(function (data) {
+            console.log("Fail while sending a message");
+            console.log(data)
+        })
+        .done(function (data) {
+        });
+}
 
 function addChat(name, id) {
     const chatsDiv = $("#chats");
@@ -53,6 +76,11 @@ function loadChats() {
 }
 
 
+function clearMessages() {
+    $("#messages").empty();
+}
+
+
 function loadMessages(chatId) {
     $.get("/messages/list?chat_id=" + chatId)
         .fail(function (data) {
@@ -79,7 +107,19 @@ function setIndexPageHandlers() {
 function initIndexPage() {
     setIndexPageHandlers();
     loadChats();
+    hideSender();
 }
+
+
+function hideSender() {
+    $("#sender").hide();
+}
+
+
+function showSender() {
+    $("#sender").show();
+}
+
 
 $(document).ready(function() {
     initIndexPage();
