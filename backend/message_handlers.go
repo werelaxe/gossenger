@@ -7,6 +7,7 @@ import (
 	"messenger/dbapi"
 	"messenger/models"
 	"net/http"
+	"strconv"
 )
 
 func SendMessageHandler(api *dbapi.Api) common.HandlerFuncType {
@@ -40,14 +41,21 @@ func ListMessagesHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		var listMessagesData models.ListMessagesRequestSchema
-		if err := json.NewDecoder(request.Body).Decode(&listMessagesData); err != nil {
+		rawChatId, ok := request.URL.Query()["chat_id"]
+		if !ok {
+			log.Println("Can not list messages: there is no chat_id parameter")
+			writer.WriteHeader(400)
+			return
+		}
+
+		chatId, err := strconv.ParseUint(rawChatId[0], 10, 64)
+		if err != nil {
 			log.Println("Can not list messages: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
 
-		ok, err := api.IsUserChatMember(user.ID, listMessagesData.ChatId)
+		ok, err = api.IsUserChatMember(user.ID, uint(chatId))
 		if err != nil {
 			log.Println("Can not list messages: " + err.Error())
 			writer.WriteHeader(400)
@@ -60,14 +68,14 @@ func ListMessagesHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		messages, err := api.ListMessages(listMessagesData.ChatId)
+		messages, err := api.ListMessages(uint(chatId))
 		if err != nil {
 			log.Println("Can not list messages: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
 
-		var listMessagesResponseData models.ListMessagesResponseSchema
+		listMessagesResponseData := models.ListMessagesResponseSchema{}
 		for _, message := range messages {
 			listMessagesResponseData = append(listMessagesResponseData, models.MessageResponseSchema{
 				Text:        message.Text,

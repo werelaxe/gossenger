@@ -28,10 +28,6 @@ type SendMessageRequestSchema struct {
 	Text   string `json:"text"`
 }
 
-type ListMessagesRequestSchema struct {
-	ChatId uint `json:"chat_id"`
-}
-
 type ListChatMembersRequestSchema struct {
 	ChatId uint `json:"chat_id"`
 }

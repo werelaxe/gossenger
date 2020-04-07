@@ -52,7 +52,7 @@ func (api *Api) IsValidPair(nickname, password string) (bool, error) {
 
 func (api *Api) CreateSession(nickname string) string {
 	salt := common.RandStringRunes(20)
-	api.Redis.Set(nickname, salt, time.Second*600)
+	api.Redis.Set(nickname, salt, time.Hour*24)
 	return salt
 }
 

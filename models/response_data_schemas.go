@@ -9,7 +9,7 @@ type ListChatsResponseSchema []ChatResponseSchema
 
 type MessageResponseSchema struct {
 	Text        string `json:"text"`
-	SenderRefer uint   `json:"sender_refer"`
+	SenderRefer uint   `json:"sender_id"`
 	Time        int64  `json:"time"`
 }
 
