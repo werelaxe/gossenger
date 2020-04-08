@@ -162,12 +162,44 @@ function loadMessages(chatId) {
 }
 
 
-function setIndexPageHandlers() {
+function setLogoutButtonHandler() {
     let logoutButton = $("#logout-btn");
     logoutButton.on("click", function () {
         clearCookies();
         location.reload();
     });
+}
+
+
+function setCreateChatHandler() {
+    const createChatButton = $("#create-chat-btn");
+
+
+    createChatButton.on("click", function () {
+        const title = $("#title-inp").val();
+        const members = $("#members-inp").val()
+            .split(",")
+            .map(function (rawId) {
+                return parseInt(rawId);
+            });
+
+        const createChatReq = JSON.stringify({
+            "title": title,
+            "members": members
+        });
+        console.log(createChatReq);
+        $.post("/chats/create", createChatReq)
+            .fail(function (data) {
+                console.log("Fail while creating a chat");
+                console.log(data)
+            })
+    });
+}
+
+
+function setIndexPageHandlers() {
+    setLogoutButtonHandler();
+    setCreateChatHandler();
 }
 
 
