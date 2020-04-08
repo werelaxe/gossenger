@@ -7,6 +7,7 @@ import (
 	"gossenger/models"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func CreateChatHandler(api *dbapi.Api) common.HandlerFuncType {
@@ -149,14 +150,22 @@ func ListChatMembersHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		var listChatMembersData models.ListChatMembersRequestSchema
-		if err := json.NewDecoder(request.Body).Decode(&listChatMembersData); err != nil {
+		rawChatId, ok := request.URL.Query()["chat_id"]
+
+		if !ok {
+			log.Println("Can not list chat members: there is no chat_id parameter")
+			writer.WriteHeader(400)
+			return
+		}
+
+		chatId, err := strconv.ParseUint(rawChatId[0], 10, 64)
+		if err != nil {
 			log.Println("Can not list chat members: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
 
-		ok, err := api.IsUserChatMember(user.ID, listChatMembersData.ChatId)
+		ok, err = api.IsUserChatMember(user.ID, uint(chatId))
 		if err != nil {
 			log.Println("Can not chat members: " + err.Error())
 			writer.WriteHeader(400)
@@ -169,7 +178,7 @@ func ListChatMembersHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		chat, err := api.GetChat(listChatMembersData.ChatId)
+		chat, err := api.GetChat(uint(chatId))
 		if err != nil {
 			log.Println("Can not list chat members: " + err.Error())
 			writer.WriteHeader(400)
