@@ -16,6 +16,7 @@ type MessageResponseSchema struct {
 type ListMessagesResponseSchema []MessageResponseSchema
 
 type ChatMemberResponseSchema struct {
+	ID        uint   `json:"id"`
 	Nickname  string `json:"nickname"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`

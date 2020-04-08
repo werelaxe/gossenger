@@ -167,7 +167,7 @@ func ListChatMembersHandler(api *dbapi.Api) common.HandlerFuncType {
 
 		ok, err = api.IsUserChatMember(user.ID, uint(chatId))
 		if err != nil {
-			log.Println("Can not chat members: " + err.Error())
+			log.Println("Can not list chat members: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
@@ -195,6 +195,7 @@ func ListChatMembersHandler(api *dbapi.Api) common.HandlerFuncType {
 		var listChatMembersResponseData models.ListChatMembersResponseSchema
 		for _, member := range members {
 			listChatMembersResponseData = append(listChatMembersResponseData, models.ChatMemberResponseSchema{
+				ID:        member.ID,
 				Nickname:  member.Nickname,
 				FirstName: member.FirstName,
 				LastName:  member.LastName,
