@@ -14,7 +14,6 @@ type LoginUserRequestSchema struct {
 
 type CreateChatRequestSchema struct {
 	Title   string `json:"title"`
-	AdminId uint   `json:"admin_id"`
 	Members []uint `json:"members"`
 }
 
