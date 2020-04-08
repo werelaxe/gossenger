@@ -1,4 +1,4 @@
-function initLoginPage() {
+function setLoginButtonHandler() {
     let loginButton = $("#login-btn");
     loginButton.on("click", function () {
         let nickname = $("#username-inp").val();
@@ -18,6 +18,21 @@ function initLoginPage() {
             });
         return false;
     });
+}
+
+
+function setRegisterPageButtonHandler() {
+    let registerPageButton = $("#register-page-btn");
+    registerPageButton.on("click", function () {
+        location.href = "/register_page";
+        return false;
+    });
+}
+
+
+function initLoginPage() {
+    setLoginButtonHandler();
+    setRegisterPageButtonHandler();
 }
 
 $(document).ready(function() {
