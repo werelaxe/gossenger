@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func SendMessageHandler(api *dbapi.Api, reminder common.UpgradeReminder) common.HandlerFuncType {
+func SendMessageHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		user := EnsureLogin(api, request)
 		if user == nil {
@@ -59,7 +59,7 @@ func SendMessageHandler(api *dbapi.Api, reminder common.UpgradeReminder) common.
 		}
 
 		for _, user := range users {
-			conn, ok := reminder[user.ID]
+			conn, ok := connKeeper[common.MessagesConnType][user.ID]
 			if !ok {
 				log.Printf("Can not get connection for user with ID=%v\n", user.ID)
 			} else {

@@ -2,10 +2,22 @@ package common
 
 import "github.com/gorilla/websocket"
 
-type UpgradeReminder map[uint]*websocket.Conn
+const (
+	MessagesConnType = "Messages"
+	ChatsConnType    = "Chats"
+)
 
-func (um UpgradeReminder) Close() {
-	for _, v := range um {
-		v.Close()
+type ConnectionKeeper map[string]map[uint]*websocket.Conn
+
+func (connKeeper ConnectionKeeper) Init() {
+	connKeeper[MessagesConnType] = make(map[uint]*websocket.Conn)
+	connKeeper[ChatsConnType] = make(map[uint]*websocket.Conn)
+}
+
+func (connKeeper ConnectionKeeper) Close() {
+	for _, conn := range connKeeper {
+		for _, conn := range conn {
+			conn.Close()
+		}
 	}
 }

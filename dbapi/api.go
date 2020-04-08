@@ -97,15 +97,15 @@ func GetUniqueUserIds(users []*models.User) map[uint]bool {
 	return common.Unique(userIds)
 }
 
-func (api *Api) CreateChat(title string, admin *models.User, users []*models.User) error {
+func (api *Api) CreateChat(title string, admin *models.User, users []*models.User) (uint, error) {
 	uniqueUserIds := GetUniqueUserIds(users)
 
 	if len(uniqueUserIds) < 2 {
-		return errors.New("can not create chat: members must contain at least two unique users")
+		return 0, errors.New("can not create chat: members must contain at least two unique users")
 	}
 
 	if _, ok := uniqueUserIds[admin.ID]; !ok {
-		return errors.New("can not create chat: members must contain admin")
+		return 0, errors.New("can not create chat: members must contain admin")
 	}
 
 	chat := models.Chat{
@@ -114,9 +114,9 @@ func (api *Api) CreateChat(title string, admin *models.User, users []*models.Use
 		Members:    users,
 	}
 	if err := api.Db.Create(&chat).Error; err != nil {
-		return errors.New("can not create chat: " + err.Error())
+		return 0, errors.New("can not create chat: " + err.Error())
 	}
-	return nil
+	return chat.ID, nil
 }
 
 func (api *Api) AddUserToChat(user *models.User, chat *models.Chat) error {

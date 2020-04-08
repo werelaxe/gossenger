@@ -16,7 +16,8 @@ import (
 func main() {
 	db, err := gorm.Open("postgres", "host=localhost port=5432 user=postgres dbname=messenger password=password sslmode=disable")
 	upgrader := websocket.Upgrader{}
-	connectionKeeper := common.UpgradeReminder{}
+	connectionKeeper := common.ConnectionKeeper{}
+	connectionKeeper.Init()
 	defer connectionKeeper.Close()
 
 	if err != nil {
@@ -45,7 +46,7 @@ func main() {
 
 	http.HandleFunc("/login", backend.LoginHandler(&api))
 
-	http.HandleFunc("/chats/create", backend.CreateChatHandler(&api))
+	http.HandleFunc("/chats/create", backend.CreateChatHandler(&api, connectionKeeper))
 	http.HandleFunc("/chats/add_user", backend.AddUserToChatHandler(&api))
 	http.HandleFunc("/chats/list", backend.ListUserChatsHandler(&api))
 	http.HandleFunc("/chats/list_members", backend.ListChatMembersHandler(&api))
@@ -57,7 +58,8 @@ func main() {
 	http.HandleFunc("/register_page", frontend.RegisterPageHandler(&api, &templateManager))
 	http.HandleFunc("/", frontend.IndexHandler(&api, &templateManager))
 
-	http.HandleFunc("/messages_ws", backend.MessagesHandler(&api, &upgrader, connectionKeeper))
+	http.HandleFunc("/messages_ws", backend.WebSocketHandler(&api, &upgrader, connectionKeeper, common.MessagesConnType))
+	http.HandleFunc("/chats_ws", backend.WebSocketHandler(&api, &upgrader, connectionKeeper, common.ChatsConnType))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

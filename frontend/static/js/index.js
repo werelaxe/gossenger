@@ -1,4 +1,5 @@
-let ws = null;
+let messagesWS = null;
+let chatsWS = null;
 let activeChatId = null;
 let displayNames = {};
 
@@ -22,11 +23,19 @@ function waitSocket(socket, callback) {
 
 
 function setMessagesReceivingHandler() {
-    ws.onmessage = function (e) {
+    messagesWS.onmessage = function (e) {
         const message = JSON.parse(e.data);
         if (activeChatId === message["chat_id"]) {
             addMessage(message["text"], message["sender_id"], message["time"]);
         }
+    }
+}
+
+
+function setChatsReceivingHandler() {
+    chatsWS.onmessage = function (e) {
+        const chat = JSON.parse(e.data);
+        addChat(chat["title"], chat["id"]);
     }
 }
 
@@ -110,9 +119,9 @@ function sendMessage(chatId, text) {
         });
 }
 
-function addChat(name, id) {
+function addChat(title, id) {
     const chatsDiv = $("#chats");
-    const newDiag = $("<li id='chat-" + id + "'>" + name + "</li>");
+    const newDiag = $("<li id='chat-" + id + "'>" + title + "</li>");
     newDiag.on("click", function () {
         activateChat(id);
     });
@@ -174,7 +183,6 @@ function setLogoutButtonHandler() {
 function setCreateChatHandler() {
     const createChatButton = $("#create-chat-btn");
 
-
     createChatButton.on("click", function () {
         const title = $("#title-inp").val();
         const members = $("#members-inp").val()
@@ -187,7 +195,6 @@ function setCreateChatHandler() {
             "title": title,
             "members": members
         });
-        console.log(createChatReq);
         $.post("/chats/create", createChatReq)
             .fail(function (data) {
                 console.log("Fail while creating a chat");
@@ -208,6 +215,7 @@ function initIndexPage() {
     setIndexPageHandlers();
     loadChats();
     setMessagesReceivingHandler();
+    setChatsReceivingHandler();
 }
 
 
@@ -221,7 +229,13 @@ function showSender() {
 }
 
 
+function waitChatSocket() {
+    waitSocket(chatsWS, initIndexPage);
+}
+
+
 $(document).ready(function() {
-    ws = new WebSocket("ws://" + location.host + "/messages_ws");
-    waitSocket(ws, initIndexPage);
+    messagesWS = new WebSocket("ws://" + location.host + "/messages_ws");
+    chatsWS = new WebSocket("ws://" + location.host + "/chats_ws");
+    waitSocket(messagesWS, waitChatSocket);
 });

@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-func CreateChatHandler(api *dbapi.Api) common.HandlerFuncType {
+func CreateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		user := EnsureLogin(api, request)
 		if user == nil {
@@ -37,10 +37,33 @@ func CreateChatHandler(api *dbapi.Api) common.HandlerFuncType {
 			users = append(users, member)
 		}
 
-		if err := api.CreateChat(createChatData.Title, user, users); err != nil {
+		newChatId, err := api.CreateChat(createChatData.Title, user, users)
+		if err != nil {
 			log.Println("Can not create chat: " + err.Error())
 			writer.WriteHeader(400)
 			return
+		}
+
+		fastChatCreatingResponseData := models.FastChatCreatingResponseSchema{
+			Title: createChatData.Title,
+			ID:    newChatId,
+		}
+
+		rawFastChatCreatingResponseData, err := json.Marshal(fastChatCreatingResponseData)
+		if err != nil {
+			log.Println("Can not marshal chat creating response data after message sending")
+			return
+		}
+
+		for _, userId := range createChatData.Members {
+			conn, ok := connKeeper[common.ChatsConnType][userId]
+			if !ok {
+				log.Printf("Can not get connection for user with ID=%v\n", user.ID)
+			} else {
+				if err := conn.WriteMessage(1, rawFastChatCreatingResponseData); err != nil {
+					log.Println("Can not write to the user connection: " + err.Error())
+				}
+			}
 		}
 	}
 }

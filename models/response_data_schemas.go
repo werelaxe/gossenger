@@ -30,3 +30,8 @@ type FastMessageResponseSchema struct {
 	Time     int64  `json:"time"`
 	ChatId   uint   `json:"chat_id"`
 }
+
+type FastChatCreatingResponseSchema struct {
+	Title string `json:"title"`
+	ID    uint   `json:"id"`
+}
