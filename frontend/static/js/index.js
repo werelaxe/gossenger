@@ -1,5 +1,6 @@
 let ws = null;
 let activeChatId = null;
+let displayNames = {};
 
 
 function waitSocket(socket, callback) {
@@ -46,10 +47,40 @@ function getChat(id) {
 }
 
 
+function saveNames(users) {
+    users.forEach(function (user) {
+        displayNames[user["id"]] = user["first_name"] + " " + user["last_name"];
+    });
+}
+
+
+function getSeparatedDisplayNames(users) {
+    return users.map(function (user) {
+        return displayNames[user["id"]];
+    }).join(", ");
+}
+
+
+function loadChatMembers(chatId) {
+    jQuery.ajax({
+        url: "/chats/list_members?chat_id=" + chatId,
+        success: function (data) {
+            const chat = getChat(chatId);
+            const users = JSON.parse(data);
+            saveNames(users);
+            $("#chat-caption").text(chat.text() + " [" + getSeparatedDisplayNames(users) + "]");
+        },
+        error: function (data) {
+            console.log("Fail while listing chat members");
+            console.log(data)
+        },
+        async: false
+    });
+}
+
+
 function activateChat(id) {
-    const chat = getChat(id);
-    console.log("Make chat '" + chat.text() + "' active");
-    $("#chat-caption").text(chat.text() + ":");
+    loadChatMembers(id);
     clearMessages();
     loadMessages(id);
     showSender();
@@ -91,9 +122,10 @@ function addChat(name, id) {
 
 function addMessage(text, senderId, time) {
     const messagesDiv = $("#messages");
-    const newMessage = $("<li>" + "User-" + senderId + ": '" + text + "', time: " + time + "</li>");
+    const newMessage = $("<li>" + displayNames[senderId] + ": '" + text + "', time: " + time + "</li>");
     messagesDiv.append(newMessage);
 }
+
 
 function loadChats() {
     $.get("/chats/list")
@@ -128,6 +160,7 @@ function loadMessages(chatId) {
             });
         });
 }
+
 
 function setIndexPageHandlers() {
     let logoutButton = $("#logout-btn");
