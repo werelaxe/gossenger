@@ -131,7 +131,7 @@ function addChat(title, id) {
 
 function addMessage(text, senderId, time) {
     const messagesDiv = $("#messages");
-    const newMessage = $("<li>" + displayNames[senderId] + ": '" + text + "', time: " + time + "</li>");
+    const newMessage = $(`<li><a href="/user_page?user_id=${senderId}">${displayNames[senderId]}</a>: '${text}', time: ${time}</li>`);
     messagesDiv.append(newMessage);
 }
 

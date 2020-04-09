@@ -1,6 +1,6 @@
 function addUser(id, nickname, first_name, last_name) {
     const usersDiv = $("#users");
-    const newRowElement = $(`<tr><td>${id}</td><td>${nickname}</td><td>${first_name}</td><td>${last_name}</td></tr>`);
+    const newRowElement = $(`<tr><td>${id}</td><td><a href="/user_page?user_id=${id}">${nickname}</a></td><td>${first_name}</td><td>${last_name}</td></tr>`);
     usersDiv.append(newRowElement);
 }
 
