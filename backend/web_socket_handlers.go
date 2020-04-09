@@ -10,8 +10,8 @@ import (
 
 func WebSocketHandler(api *dbapi.Api, upgrader *websocket.Upgrader, connKeeper common.ConnectionKeeper, connType string) common.HandlerFuncType {
 	return func(w http.ResponseWriter, r *http.Request) {
-		user := EnsureLogin(api, r)
-		if user == nil {
+		loggedUser := EnsureLogin(api, r)
+		if loggedUser == nil {
 			return
 		}
 
@@ -21,7 +21,7 @@ func WebSocketHandler(api *dbapi.Api, upgrader *websocket.Upgrader, connKeeper c
 			return
 		}
 
-		log.Printf("New connection (type: %v) created for user with ID=%v\n", connType, user.ID)
-		connKeeper[connType][user.ID] = c
+		log.Printf("New connection (type: %v) created for loggedUser with ID=%v\n", connType, loggedUser.ID)
+		connKeeper[connType][loggedUser.ID] = c
 	}
 }

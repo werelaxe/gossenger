@@ -54,8 +54,13 @@ func main() {
 	http.HandleFunc("/messages/send", backend.SendMessageHandler(&api, connectionKeeper))
 	http.HandleFunc("/messages/list", backend.ListMessagesHandler(&api))
 
+	http.HandleFunc("/users/list", backend.ListUsersHandler(&api))
+	http.HandleFunc("/users/show", backend.ShowUserHandler(&api))
+
 	http.HandleFunc("/login_page", frontend.LoginPageHandler(&api, &templateManager))
 	http.HandleFunc("/register_page", frontend.RegisterPageHandler(&api, &templateManager))
+	http.HandleFunc("/users_page", frontend.UsersPageHandler(&api, &templateManager))
+	http.HandleFunc("/user_page", frontend.UserPageHandler(&api, &templateManager))
 	http.HandleFunc("/", frontend.IndexHandler(&api, &templateManager))
 
 	http.HandleFunc("/messages_ws", backend.WebSocketHandler(&api, &upgrader, connectionKeeper, common.MessagesConnType))

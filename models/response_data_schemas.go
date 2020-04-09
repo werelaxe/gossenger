@@ -35,3 +35,12 @@ type FastChatCreatingResponseSchema struct {
 	Title string `json:"title"`
 	ID    uint   `json:"id"`
 }
+
+type UserResponseSchema struct {
+	ID        uint   `json:"id"`
+	Nickname  string `json:"nickname"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}
+
+type ListUsersResponseSchema []UserResponseSchema

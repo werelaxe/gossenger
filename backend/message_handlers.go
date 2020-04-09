@@ -13,8 +13,8 @@ import (
 
 func SendMessageHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := EnsureLogin(api, request)
-		if user == nil {
+		loggedUser := EnsureLogin(api, request)
+		if loggedUser == nil {
 			writer.WriteHeader(400)
 			return
 		}
@@ -33,7 +33,7 @@ func SendMessageHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) comm
 			return
 		}
 
-		if err := api.SendMessage(sendMessageData.Text, user.ID, sendMessageData.ChatId); err != nil {
+		if err := api.SendMessage(sendMessageData.Text, loggedUser.ID, sendMessageData.ChatId); err != nil {
 			log.Println("Can not send message: " + err.Error())
 			writer.WriteHeader(400)
 			return
@@ -47,7 +47,7 @@ func SendMessageHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) comm
 
 		fastMessageResponseData := models.FastMessageResponseSchema{
 			Text:     sendMessageData.Text,
-			SenderId: user.ID,
+			SenderId: loggedUser.ID,
 			Time:     time.Now().Unix(),
 			ChatId:   sendMessageData.ChatId,
 		}
@@ -61,11 +61,11 @@ func SendMessageHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) comm
 		for _, user := range users {
 			conn, ok := connKeeper[common.MessagesConnType][user.ID]
 			if !ok {
-				log.Printf("Can not get connection for user with ID=%v\n", user.ID)
+				log.Printf("Can not get connection for loggedUser with ID=%v\n", user.ID)
 			} else {
 
 				if err := conn.WriteMessage(1, rawFastMessageResponseData); err != nil {
-					log.Println("Can not write to the user connection: " + err.Error())
+					log.Println("Can not write to the loggedUser connection: " + err.Error())
 				}
 			}
 		}
@@ -74,8 +74,8 @@ func SendMessageHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) comm
 
 func ListMessagesHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := EnsureLogin(api, request)
-		if user == nil {
+		loggedUser := EnsureLogin(api, request)
+		if loggedUser == nil {
 			writer.WriteHeader(400)
 			return
 		}
@@ -94,7 +94,7 @@ func ListMessagesHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		ok, err = api.IsUserChatMember(user.ID, uint(chatId))
+		ok, err = api.IsUserChatMember(loggedUser.ID, uint(chatId))
 		if err != nil {
 			log.Println("Can not list messages: " + err.Error())
 			writer.WriteHeader(400)
@@ -102,7 +102,7 @@ func ListMessagesHandler(api *dbapi.Api) common.HandlerFuncType {
 		}
 
 		if !ok {
-			log.Println("Can not list messages: user is not a member of requested chat")
+			log.Println("Can not list messages: loggedUser is not a member of requested chat")
 			writer.WriteHeader(400)
 			return
 		}

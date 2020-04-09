@@ -12,8 +12,8 @@ import (
 
 func CreateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := EnsureLogin(api, request)
-		if user == nil {
+		loggedUser := EnsureLogin(api, request)
+		if loggedUser == nil {
 			writer.WriteHeader(400)
 			return
 		}
@@ -37,7 +37,7 @@ func CreateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) commo
 			users = append(users, member)
 		}
 
-		newChatId, err := api.CreateChat(createChatData.Title, user, users)
+		newChatId, err := api.CreateChat(createChatData.Title, loggedUser, users)
 		if err != nil {
 			log.Println("Can not create chat: " + err.Error())
 			writer.WriteHeader(400)
@@ -58,10 +58,10 @@ func CreateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) commo
 		for _, userId := range createChatData.Members {
 			conn, ok := connKeeper[common.ChatsConnType][userId]
 			if !ok {
-				log.Printf("Can not get connection for user with ID=%v\n", user.ID)
+				log.Printf("Can not get connection for loggedUser with ID=%v\n", loggedUser.ID)
 			} else {
 				if err := conn.WriteMessage(1, rawFastChatCreatingResponseData); err != nil {
-					log.Println("Can not write to the user connection: " + err.Error())
+					log.Println("Can not write to the loggedUser connection: " + err.Error())
 				}
 			}
 		}
@@ -70,56 +70,56 @@ func CreateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) commo
 
 func AddUserToChatHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := EnsureLogin(api, request)
-		if user == nil {
+		loggedUser := EnsureLogin(api, request)
+		if loggedUser == nil {
 			writer.WriteHeader(400)
 			return
 		}
 
 		var addUserToChatData models.AddUserToChatRequestSchema
 		if err := json.NewDecoder(request.Body).Decode(&addUserToChatData); err != nil {
-			log.Println("Can not add user to chat: " + err.Error())
+			log.Println("Can not add loggedUser to chat: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
 
 		newMember, err := api.GetUserById(addUserToChatData.UserId)
 		if err != nil {
-			log.Println("Can not add user to chat: " + err.Error())
+			log.Println("Can not add loggedUser to chat: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
 
 		chat, err := api.GetChat(addUserToChatData.ChatId)
 		if err != nil {
-			log.Println("Can not add user to chat: " + err.Error())
+			log.Println("Can not add loggedUser to chat: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
 
 		users, err := api.ListChatMembers(chat)
 		if err != nil {
-			log.Println("Can not add user to chat: " + err.Error())
+			log.Println("Can not add loggedUser to chat: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
 
 		uniqueUserIds := dbapi.GetUniqueUserIds(users)
 
-		if _, ok := uniqueUserIds[user.ID]; !ok {
-			log.Println("Can not add user to chat: logged user must be in chat")
+		if _, ok := uniqueUserIds[loggedUser.ID]; !ok {
+			log.Println("Can not add loggedUser to chat: logged loggedUser must be in chat")
 			writer.WriteHeader(400)
 			return
 		}
 
 		if _, ok := uniqueUserIds[newMember.ID]; ok {
-			log.Println("Can not add user to chat: user is already in chat")
+			log.Println("Can not add loggedUser to chat: loggedUser is already in chat")
 			writer.WriteHeader(400)
 			return
 		}
 
 		if err = api.AddUserToChat(newMember, chat); err != nil {
-			log.Println("Can not add user to chat: " + err.Error())
+			log.Println("Can not add loggedUser to chat: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
@@ -128,15 +128,15 @@ func AddUserToChatHandler(api *dbapi.Api) common.HandlerFuncType {
 
 func ListUserChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := EnsureLogin(api, request)
-		if user == nil {
+		loggedUser := EnsureLogin(api, request)
+		if loggedUser == nil {
 			writer.WriteHeader(400)
 			return
 		}
 
-		chats, err := api.ListUserChats(user)
+		chats, err := api.ListUserChats(loggedUser)
 		if err != nil {
-			log.Println("Can not list user chats: " + err.Error())
+			log.Println("Can not list loggedUser chats: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
@@ -167,8 +167,8 @@ func ListUserChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 
 func ListChatMembersHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := EnsureLogin(api, request)
-		if user == nil {
+		loggedUser := EnsureLogin(api, request)
+		if loggedUser == nil {
 			writer.WriteHeader(400)
 			return
 		}
@@ -188,7 +188,7 @@ func ListChatMembersHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		ok, err = api.IsUserChatMember(user.ID, uint(chatId))
+		ok, err = api.IsUserChatMember(loggedUser.ID, uint(chatId))
 		if err != nil {
 			log.Println("Can not list chat members: " + err.Error())
 			writer.WriteHeader(400)
@@ -196,7 +196,7 @@ func ListChatMembersHandler(api *dbapi.Api) common.HandlerFuncType {
 		}
 
 		if !ok {
-			log.Println("Can not list chat members: user is not a member of requested chat")
+			log.Println("Can not list chat members: loggedUser is not a member of requested chat")
 			writer.WriteHeader(400)
 			return
 		}

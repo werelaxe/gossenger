@@ -8,16 +8,10 @@ import (
 	"net/http"
 )
 
-type userPageSchema struct {
-	FirstName string
-	LastName  string
-	Nickname  string
-}
-
 func IndexHandler(api *dbapi.Api, templateManager *TemplateManager) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := backend.EnsureLogin(api, request)
-		if user == nil {
+		loggedUser := backend.EnsureLogin(api, request)
+		if loggedUser == nil {
 			backend.Redirect(writer, "/login_page")
 			return
 		}
@@ -29,10 +23,10 @@ func IndexHandler(api *dbapi.Api, templateManager *TemplateManager) common.Handl
 			return
 		}
 
-		userPageData := userPageSchema{
-			FirstName: user.FirstName,
-			LastName:  user.LastName,
-			Nickname:  user.Nickname,
+		userPageData := UserPageSchema{
+			FirstName: loggedUser.FirstName,
+			LastName:  loggedUser.LastName,
+			Nickname:  loggedUser.Nickname,
 		}
 
 		if err := tpl.Execute(writer, userPageData); err != nil {

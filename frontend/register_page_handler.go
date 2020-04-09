@@ -10,8 +10,8 @@ import (
 
 func RegisterPageHandler(api *dbapi.Api, templateManager *TemplateManager) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		user := backend.EnsureLogin(api, request)
-		if user != nil {
+		loggedUser := backend.EnsureLogin(api, request)
+		if loggedUser != nil {
 			backend.Redirect(writer, "/")
 			return
 		}
