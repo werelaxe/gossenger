@@ -21,7 +21,7 @@ func main() {
 	defer connectionKeeper.Close()
 
 	if err != nil {
-		panic(err)
+		panic("Database connection error:" + err.Error())
 	}
 	defer db.Close()
 	client := redis.NewClient(&redis.Options{
@@ -29,6 +29,10 @@ func main() {
 		Password: "",
 		DB:       0,
 	})
+
+	if status := client.Ping(); status.Err() != nil {
+		panic("Redis connection error:" + status.Err().Error())
+	}
 
 	api := dbapi.Api{
 		Db:    db,
