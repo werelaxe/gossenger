@@ -1,0 +1,17 @@
+version: '2.2'
+services:
+  db:
+    image: "postgres:11-alpine"
+    restart: "always"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=gossenger
+      - POSTGRES_PASSWORD=password
+  gossenger:
+    build: .
+    ports:
+      - "8080:8080"
+    restart: on-failure
+  redis:
+    image: "redis:alpine"
+    command: redis-server
