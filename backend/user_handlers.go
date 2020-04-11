@@ -101,3 +101,51 @@ func ShowUserHandler(api *dbapi.Api) common.HandlerFuncType {
 		}
 	}
 }
+
+func SearchUsersHandler(api *dbapi.Api) common.HandlerFuncType {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		loggedUser := EnsureLogin(api, request)
+		if loggedUser == nil {
+			writer.WriteHeader(400)
+			return
+		}
+
+		filter, ok := request.URL.Query()["filter"]
+		if !ok {
+			log.Println("Can not show user: query parameters must contain filter")
+			writer.WriteHeader(400)
+			return
+		}
+
+		users, err := api.SearchUsers(filter[0])
+		if err != nil {
+			log.Println("Can not search users: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		listUsersResponseData := models.ListUsersResponseSchema{}
+		for _, user := range users {
+			newUserResponse := models.UserResponseSchema{
+				ID:        user.ID,
+				Nickname:  user.Nickname,
+				FirstName: user.FirstName,
+				LastName:  user.LastName,
+			}
+			listUsersResponseData = append(listUsersResponseData, newUserResponse)
+		}
+
+		rawListUsersResponseData, err := json.Marshal(listUsersResponseData)
+		if err != nil {
+			log.Println("Can not search users: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		if _, err = writer.Write(rawListUsersResponseData); err != nil {
+			log.Println("Can not search users: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+	}
+}

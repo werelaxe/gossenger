@@ -59,6 +59,7 @@ func main() {
 	http.HandleFunc("/messages/list", backend.ListMessagesHandler(&api))
 
 	http.HandleFunc("/users/list", backend.ListUsersHandler(&api))
+	http.HandleFunc("/users/search", backend.SearchUsersHandler(&api))
 	http.HandleFunc("/users/show", backend.ShowUserHandler(&api))
 
 	http.HandleFunc("/login_page", frontend.LoginPageHandler(&api, &templateManager))
