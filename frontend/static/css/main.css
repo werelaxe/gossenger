@@ -1,0 +1,85 @@
+.tooltip-inner {
+    width: 140px;
+}
+
+.card {
+    margin-top: 15px;
+    height: 220px;
+}
+
+body {
+    padding-top: 70px;
+}
+
+.bottom-btn {
+    position: absolute;
+    bottom: 10px;
+}
+
+.navbar-middle-text {
+    padding-left: 50px;
+}
+
+.chat-box {
+    background-color: #18222d;
+    border: 1px solid #3e6a97;
+    margin-top: -1px;
+}
+
+.chat-title {
+    font-weight: bold;
+    font-size: 18px;
+    padding-top: 5px;
+    padding-left: 30px;
+}
+
+.chat-message-preview {
+    padding-top: 3px;
+    padding-left: 30px;
+    padding-bottom: 10px;
+}
+
+.chats-content {
+    overflow: auto;
+}
+
+.message-box {
+    background-color: #333333;
+}
+
+.message-sender-name {
+    color: gray;
+    font-weight: bold;
+    padding-left: 5px;
+    padding-top: 5px;
+}
+
+.message-time {
+    color: gray;
+    font-size: 13px;
+    float: right;
+    padding-top: 3px;
+    padding-right: 10px;
+}
+
+.message-text {
+    padding-left: 7px;
+    padding-bottom: 10px;
+}
+
+.messages-content {
+    overflow: auto;
+    margin-bottom: 10px;
+}
+
+#message-inp {
+    height: 45px;
+}
+
+.active-chat {
+    background-color: #3e6a97;
+}
+
+.search-user-box {
+
+}
