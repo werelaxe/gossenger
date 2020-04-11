@@ -196,7 +196,7 @@ func (api *Api) ListUsers() ([]models.User, error) {
 
 func (api *Api) SearchUsers(filter string) ([]models.User, error) {
 	var users []models.User
-	query := "first_name LIKE ? OR last_name LIKE ? OR nickname LIKE ?"
+	query := "first_name ILIKE ? OR last_name ILIKE ? OR nickname ILIKE ?"
 	filterPattern := "%" + filter + "%"
 	if err := api.Db.Where(query, filterPattern, filterPattern, filterPattern).Find(&users).Error; err != nil {
 		return nil, errors.New("can not search users: " + err.Error())
