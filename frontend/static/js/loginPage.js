@@ -1,7 +1,7 @@
 function setLoginButtonHandler() {
     let loginButton = $("#login-btn");
     loginButton.on("click", function () {
-        let nickname = $("#username-inp").val();
+        let nickname = $("#nickname-inp").val();
         let password = $("#password-inp").val();
 
         let loginReq = JSON.stringify({

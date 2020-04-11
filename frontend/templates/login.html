@@ -2,21 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login Page</title>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <title>Register</title>
+    <script src="/static/js/jquery-3.4.1.min.js"></script>
     <script src="/static/js/loginPage.js"></script>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/main.css" rel="stylesheet">
 </head>
 <body>
-<div>
-    <form id="login-form">
-        <label>Log in</label><br>
-        <input type="text" name="username" id="username-inp" placeholder="username">
-        <input type="password" name="password" id="password-inp" placeholder="password"><br>
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/">Gossenger</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/register_page">Register</a></li>
+                <li class="active"><a href="/login_page">Login</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
 
-        <button id="login-btn">Login</button>
-        <button id="register-page-btn">Go to register Page</button>
-        <br>
-    </form>
-</div>
-</body>
+<div class="container">
+    <div class="col-md-4"></div>
+    <div class="col-md-4">
+        <h2>Login</h2>
+        <form>
+            <div class="form-group has-feedback">
+                <label for="nickname-inp">Nickname</label>
+                <input type="text" class="form-control" id="nickname-inp" placeholder="Nickname" data-toggle="tooltip">
+            </div>
+            <div class="form-group has-feedback">
+                <label for="password-inp">Password</label>
+                <input type="password" class="form-control" id="password-inp" placeholder="Password" data-toggle="tooltip">
+            </div>
+            <button type="submit" class="btn btn-default" id="login-btn">Login</button>
+        </form>
+    </div>
+</div></body>
 </html>
