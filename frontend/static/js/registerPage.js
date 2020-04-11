@@ -1,7 +1,7 @@
 function initRegisterPage() {
     let registerButton = $("#register-btn");
     registerButton.on("click", function () {
-        let nickname = $("#username-inp").val();
+        let nickname = $("#nickname-inp").val();
         let password = $("#password-inp").val();
         let firstName = $("#first-name-inp").val();
         let lastName = $("#last-name-inp").val();

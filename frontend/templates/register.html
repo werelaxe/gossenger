@@ -2,23 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Register Page</title>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <title>Register</title>
+    <script src="/static/js/jquery-3.4.1.min.js"></script>
     <script src="/static/js/registerPage.js"></script>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/main.css" rel="stylesheet">
 </head>
 <body>
-<div>
-    <form id="register-form">
-        <label>Register</label><br>
-        <input type="text" id="username-inp" placeholder="Username">
-        <input type="password" id="password-inp" placeholder="Password"><br>
-        <input type="text" id="first-name-inp" placeholder="First name"><br>
-        <input type="text" id="last-name-inp" placeholder="Last name"><br>
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/">Gossenger</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="active"><a href="/register_page">Register</a></li>
+                <li><a href="/login_page">Login</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
 
-        <button id="register-btn">Register</button>
-        <button id="login-page-btn">Go to login Page</button>
-        <br>
-    </form>
-</div>
-</body>
+<div class="container">
+    <div class="col-md-4"></div>
+    <div class="col-md-4">
+        <h2>Register</h2>
+        <form>
+            <div class="form-group has-feedback">
+                <label for="first-name-inp">First name</label>
+                <input type="text" class="form-control" id="first-name-inp" placeholder="First name" data-toggle="tooltip">
+            </div>
+            <div class="form-group has-feedback">
+                <label for="last-name-inp">Last name</label>
+                <input type="text" class="form-control" id="last-name-inp" placeholder="Last name" data-toggle="tooltip">
+            </div>
+            <div class="form-group has-feedback">
+                <label for="nickname-inp">Nickname</label>
+                <input type="text" class="form-control" id="nickname-inp" placeholder="Nickname" data-toggle="tooltip">
+            </div>
+            <div class="form-group has-feedback">
+                <label for="password-inp">Password</label>
+                <input type="password" class="form-control" id="password-inp" placeholder="Password" data-toggle="tooltip">
+            </div>
+            <button type="submit" class="btn btn-default" id="register-btn">Register</button>
+        </form>
+    </div>
+</div></body>
 </html>
