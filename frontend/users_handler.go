@@ -49,6 +49,7 @@ func UsersPageHandler(api *dbapi.Api, templateManager *TemplateManager) common.H
 		}
 
 		loggedUserData := UserPageSchema{
+			ID:        loggedUser.ID,
 			FirstName: loggedUser.FirstName,
 			LastName:  loggedUser.LastName,
 			Nickname:  loggedUser.Nickname,
@@ -107,12 +108,14 @@ func UserPageHandler(api *dbapi.Api, templateManager *TemplateManager) common.Ha
 		}
 
 		requestedUserPageData := UserPageSchema{
+			ID:        user.ID,
 			Nickname:  user.Nickname,
 			FirstName: user.FirstName,
 			LastName:  user.LastName,
 		}
 
 		loggedUserPageData := UserPageSchema{
+			ID:        loggedUser.ID,
 			Nickname:  loggedUser.Nickname,
 			FirstName: loggedUser.FirstName,
 			LastName:  loggedUser.LastName,

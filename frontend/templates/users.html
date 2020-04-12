@@ -15,6 +15,7 @@
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav">
+                <li><a href="/">Messaging</a></li>
                 <li class="active"><a href="/users_page">Users search</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
@@ -42,7 +43,7 @@
                 <tr>
                     <td>{{ .FirstName }}</td>
                     <td>{{ .LastName }}</td>
-                    <td>{{ .Nickname }}</td>
+                    <td><a href="/user_page?user_id={{ .ID }}">{{ .Nickname }}</a></td>
                 </tr>
             {{ end }}
             </tbody>

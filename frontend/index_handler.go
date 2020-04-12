@@ -24,6 +24,7 @@ func IndexHandler(api *dbapi.Api, templateManager *TemplateManager) common.Handl
 		}
 
 		userPageData := UserPageSchema{
+			ID:        loggedUser.ID,
 			FirstName: loggedUser.FirstName,
 			LastName:  loggedUser.LastName,
 			Nickname:  loggedUser.Nickname,

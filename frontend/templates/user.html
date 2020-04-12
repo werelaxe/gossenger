@@ -15,7 +15,9 @@
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
             <ul class="nav navbar-nav">
+                <li><a href="/">Messaging</a></li>
                 <li><a href="/users_page">Users search</a></li>
+                <li class="active"><a href="/user_page?user_id={{ .Requested.ID }}">{{ .Requested.FirstName }} {{ .Requested.LastName }}</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 <li>
@@ -30,9 +32,9 @@
 </nav>
 
 <div class="container">
-    <div class="col-md-4"></div>
+    <div class="col-md-2"></div>
 
-    <div class="col-md-6">
+    <div class="col-md-8">
         <h2><span style="color: #aaaaaa">Full Name:</span> <strong>{{ .Requested.FirstName }} {{ .Requested.LastName }}</strong></h2>
         <h2><span style="color: #aaaaaa">Nickname: </span><strong>{{ .Requested.Nickname }}</strong></h2>
     </div>
