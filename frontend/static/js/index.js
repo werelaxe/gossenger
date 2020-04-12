@@ -48,8 +48,10 @@ function setMessagesReceivingHandler() {
         if (activeChatId === chatId) {
             addMessage(messageText, senderId, message["time"]);
         }
+
         const chatMessagePreview = $(`#chat-${chatId}-message-preview-text`);
         chatMessagePreview.text(`${getDisplayName(senderId)}: ${messageText}`);
+        moveChatToTop(chatId);
     }
 }
 
@@ -213,6 +215,12 @@ function addChat(title, id, previewMessageText, previewMessageSender) {
     } else {
         addChatElement(title, id, `${senderDisplayName}: ${previewMessageText}`, false);
     }
+}
+
+function moveChatToTop(chatId) {
+    const chat = getChat(chatId);
+    chat.remove();
+    $("#chats").prepend(chat);
 }
 
 function addChatElement(title, id, messagePreview, isNewChat) {
