@@ -7,6 +7,7 @@ import (
 	"gossenger/models"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 )
 
@@ -142,6 +143,13 @@ func ListChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
+		type TimePair struct {
+			LastMessageTime  int64
+			ChatCreationTime int64
+		}
+
+		sortingMap := make(map[uint]TimePair)
+
 		var listChatsResponseData models.ListChatsResponseSchema
 		for _, chat := range chats {
 			lastMessage, err := api.GetChatLastMessage(chat.ID)
@@ -158,14 +166,30 @@ func ListChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 					PreviewMessageText:   lastMessage.Text,
 					PreviewMessageSender: lastMessage.SenderRefer,
 				})
+				sortingMap[chat.ID] = TimePair{lastMessage.Time, 0}
 			} else {
 				listChatsResponseData = append(listChatsResponseData, models.ChatResponseSchema{
 					ChatId:               chat.ID,
 					Title:                chat.Title,
 					PreviewMessageSender: chat.AdminRefer,
 				})
+				sortingMap[chat.ID] = TimePair{0, chat.CreatedAt.Unix()}
 			}
 		}
+
+		sort.Slice(listChatsResponseData, func(i, j int) bool {
+			firstElement := sortingMap[listChatsResponseData[j].ChatId]
+			secondElement := sortingMap[listChatsResponseData[i].ChatId]
+			if firstElement.LastMessageTime != 0 && secondElement.LastMessageTime != 0 {
+				return firstElement.LastMessageTime < secondElement.LastMessageTime
+			} else if firstElement.LastMessageTime == 0 && secondElement.LastMessageTime == 0 {
+				return firstElement.ChatCreationTime < secondElement.ChatCreationTime
+			} else if firstElement.LastMessageTime != 0 {
+				return firstElement.LastMessageTime < secondElement.ChatCreationTime
+			} else {
+				return firstElement.ChatCreationTime < secondElement.LastMessageTime
+			}
+		})
 
 		rawListChatsResponseData, err := json.Marshal(listChatsResponseData)
 		if err != nil {
