@@ -2,18 +2,51 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Users</title>
+    <title>Users Search</title>
     <script src="/static/js/jquery-3.4.1.min.js"></script>
-    <script src="/static/js/users.js"></script>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/main.css" rel="stylesheet">
 </head>
 <body>
-<table id="users" border="1px solid black;">
-<tr>
-    <td>id</td>
-    <td>nickname</td>
-    <td>first name</td>
-    <td>last name</td>
-</tr>
-</table>
-</body>
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/">Gossenger</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="/users_page">Users search</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><span class="navbar-text"><strong>{{ .Logged.FirstName }} {{ .Logged.LastName }}</strong> aka <strong>{{ .Logged.Nickname }}</strong></span></li>
+                <li><a href="" id="logout-el">Log out</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="col-md-2"></div>
+
+    <div class="col-md-8">
+        <table class="table table-hover table-bordered">
+            <thead>
+            <tr>
+                <th scope="col"><a href="">First Name</a></th>
+                <th scope="col"><a href="">Last Name</a></th>
+                <th scope="col"><a href="">Nickname</a></th>
+            </tr>
+            </thead>
+            <tbody>
+            {{ range .Users }}
+                <tr>
+                    <td>{{ .FirstName }}</td>
+                    <td>{{ .LastName }}</td>
+                    <td>{{ .Nickname }}</td>
+                </tr>
+            {{ end }}
+            </tbody>
+        </table>
+    </div>
+</div></body>
 </html>

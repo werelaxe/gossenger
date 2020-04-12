@@ -31,7 +31,38 @@ func UsersPageHandler(api *dbapi.Api, templateManager *TemplateManager) common.H
 			return
 		}
 
-		if err := tpl.Execute(writer, struct{}{}); err != nil {
+		users, err := api.ListUsers()
+		if err != nil {
+			log.Println("Can not return users page: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		var usersResponseData []UserPageSchema
+		for _, user := range users {
+			usersResponseData = append(usersResponseData, UserPageSchema{
+				ID:        user.ID,
+				FirstName: user.FirstName,
+				LastName:  user.LastName,
+				Nickname:  user.Nickname,
+			})
+		}
+
+		loggedUserData := UserPageSchema{
+			FirstName: loggedUser.FirstName,
+			LastName:  loggedUser.LastName,
+			Nickname:  loggedUser.Nickname,
+		}
+
+		pageData := struct {
+			Logged UserPageSchema
+			Users  []UserPageSchema
+		}{
+			loggedUserData,
+			usersResponseData,
+		}
+
+		if err := tpl.Execute(writer, pageData); err != nil {
 			log.Println("Can not return users page: " + err.Error())
 			writer.WriteHeader(400)
 			return
@@ -75,14 +106,27 @@ func UserPageHandler(api *dbapi.Api, templateManager *TemplateManager) common.Ha
 			return
 		}
 
-		userPageData := UserPageSchema{
-			ID:        user.ID,
+		requestedUserPageData := UserPageSchema{
 			Nickname:  user.Nickname,
 			FirstName: user.FirstName,
 			LastName:  user.LastName,
 		}
 
-		if err := tpl.Execute(writer, userPageData); err != nil {
+		loggedUserPageData := UserPageSchema{
+			Nickname:  loggedUser.Nickname,
+			FirstName: loggedUser.FirstName,
+			LastName:  loggedUser.LastName,
+		}
+
+		usersPageData := struct {
+			Requested UserPageSchema
+			Logged    UserPageSchema
+		}{
+			requestedUserPageData,
+			loggedUserPageData,
+		}
+
+		if err := tpl.Execute(writer, usersPageData); err != nil {
 			log.Println("Can not return user page: " + err.Error())
 			writer.WriteHeader(400)
 			return

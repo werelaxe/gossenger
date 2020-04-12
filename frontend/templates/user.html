@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Register</title>
+    <title>{{ .Requested.FirstName }} {{ .Requested.LastName }}'s page</title>
     <script src="/static/js/jquery-3.4.1.min.js"></script>
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/main.css" rel="stylesheet">
@@ -18,7 +18,11 @@
                 <li><a href="/users_page">Users search</a></li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li><span class="navbar-text"><strong>{{ .FirstName }} {{ .LastName }}</strong> aka <strong>{{ .Nickname }}</strong></span></li>
+                <li>
+                    <span class="navbar-text">
+                        <strong>{{ .Logged.FirstName }} {{ .Logged.LastName }}</strong> aka <strong>{{ .Logged.Nickname }}</strong>
+                    </span>
+                </li>
                 <li><a href="" id="logout-el">Log out</a></li>
             </ul>
         </div>
@@ -29,8 +33,8 @@
     <div class="col-md-4"></div>
 
     <div class="col-md-6">
-        <h2><span style="color: #aaaaaa">Full Name:</span> <strong>{{ .FirstName }} {{ .LastName }}</strong></h2>
-        <h2><span style="color: #aaaaaa">Nickname: </span><strong>{{ .Nickname }}</strong></h2>
+        <h2><span style="color: #aaaaaa">Full Name:</span> <strong>{{ .Requested.FirstName }} {{ .Requested.LastName }}</strong></h2>
+        <h2><span style="color: #aaaaaa">Nickname: </span><strong>{{ .Requested.Nickname }}</strong></h2>
     </div>
 </div></body>
 </html>
