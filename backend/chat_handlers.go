@@ -45,6 +45,21 @@ func CreateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) commo
 			return
 		}
 
+		rawResponseData, err := json.Marshal(struct {
+			ChatId uint `json:"chat_id"`
+		}{newChatId})
+		if err != nil {
+			log.Println("Can not send response after created chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		if _, err = writer.Write(rawResponseData); err != nil {
+			log.Println("Can not send response after created chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
 		fastChatCreatingResponseData := models.FastChatCreatingResponseSchema{
 			Title:                createChatData.Title,
 			ID:                   newChatId,
