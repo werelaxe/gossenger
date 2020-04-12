@@ -5,6 +5,7 @@ let displayNames = new Map();
 let chatTitles = {};
 let pickedUsers = new Map();
 let lastUsersSearch = null;
+let chatMembers = [];
 
 
 function waitSocket(socket, callback) {
@@ -65,6 +66,34 @@ function setChatsReceivingHandler() {
 }
 
 
+function addMember(displayName, id) {
+    const newRow = $(`
+        <tr>
+            <td><a href="/user_page?user_id=${id}">${displayName}</a></td>
+        </tr>
+    `);
+    $("#info-table").append(newRow);
+}
+
+
+function loadInfoContent() {
+    $("#info-table").empty();
+    chatMembers.forEach(function (userId) {
+        addMember(getDisplayName(userId), userId);
+    });
+}
+
+
+function showInfoContent() {
+    $("#info-content").show();
+}
+
+
+function hideInfoContent() {
+    $("#info-content").hide();
+}
+
+
 function clearCookies() {
     const cookies = document.cookie.split(";");
     for (let i = 0; i < cookies.length; i++) {
@@ -82,8 +111,11 @@ function getChat(id) {
 
 
 function saveNames(users) {
+    chatMembers = [];
     users.forEach(function (user) {
-        displayNames.set(user["id"], user["first_name"] + " " + user["last_name"]);
+        const userId = user["id"];
+        chatMembers.push(userId);
+        displayNames.set(userId, user["first_name"] + " " + user["last_name"]);
     });
 }
 
@@ -109,6 +141,7 @@ function activateChat(id) {
     }
     $("#chat-creating").hide();
     $("#prompt").hide();
+    hideInfoContent();
 
     const messageInp = $("#message-inp");
     const sendButton = $("#send-btn");
@@ -159,13 +192,18 @@ function activateChat(id) {
 
     getChat(activeChatId).removeClass("active-chat disable-hover");
     getChat(id).addClass("active-chat disable-hover");
-    setMainContentTitle("Messages of " + chatTitles[id]);
+    setMainContentTitle(`Messages of <a style="cursor: pointer" id="show-info-btn">${chatTitles[id]}</a>`);
+
+    $("#show-info-btn").on("click", function () {
+        loadInfoContent();
+        showInfoContent();
+    });
     activeChatId = id;
 }
 
 
 function setMainContentTitle(text) {
-    $("#main-content-title").text(text);
+    $("#main-content-title").html(text);
 }
 
 
