@@ -40,6 +40,7 @@ func main() {
 	}
 
 	api.Init()
+
 	var templateManager frontend.TemplateManager
 	templateManager.Init("frontend/templates")
 

@@ -2,35 +2,77 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Messenger</title>
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <title>Register</title>
+    <script src="/static/js/jquery-3.4.1.min.js"></script>
     <script src="/static/js/index.js"></script>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/main.css" rel="stylesheet">
 </head>
 <body>
-<p>
-    Hello, {{.Nickname}}!
-</p>
-    <button id="logout-btn">Log Out</button>
-    <a href="/users_page">Users Search</a>
-<div>
-    <div>
-        <input type="text" id="title-inp" placeholder="Title">
-        <input type="text" id="members-inp" placeholder="Comma-separated member ids">
-        <button id="create-chat-btn">Create chat</button>
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="/">Gossenger</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav">
+                <li><a href="/users_page">Users search</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><span class="navbar-text"><strong>{{ .FirstName }} {{ .LastName }} aka {{ .Nickname }}</strong></span></li>
+                <li><a href="" id="logout-el">Log out</a></li>
+            </ul>
+        </div>
     </div>
-    <label>Chats:</label>
-    <ul id="chats">
+</nav>
 
-    </ul>
+<div class="container">
+    <div class="col-md-4">
+        <h2>Chats</h2>
+        <div class="chats-content" id="chats">
 
-    <label id="chat-caption">Select chat</label>
-    <ul id="messages">
-
-    </ul>
-    <div id="sender">
-        <input type="text" id="message-inp" placeholder="message...">
-        <button id="send-btn">Send</button>
+        </div>
     </div>
-</div>
-</body>
+    <div class="col-md-6">
+        <h2 id="main-content-title">Messages</h2>
+        <div class="messages-content" id="messages">
+
+            <p id="prompt">
+                Select a chat to view messages or <a id="show-create-chat-btn" style="cursor: pointer">create</a> a new one.
+            </p>
+            <div id="chat-creating" style="display: none">
+                <div class="input-group" id="new-chat-box">
+                    <input class="form-control" id="new-chat-title-inp" placeholder="New chat title...">
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-default" id="create-chat-btn">Create</button>
+                    </span>
+                </div>
+
+                <div class="search-user-box">
+                    <table class="table table-hover">
+                        <tbody id="picked-users">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="form-group" id="chat-creating-search">
+                    <label for="search-users-inp">Search users</label>
+                    <input class="form-control" id="search-users-inp" type="text" placeholder="Input name or nick">
+                </div>
+                <div class="search-user-box">
+                    <table class="table table-hover">
+                        <tbody id="search-table">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="input-group" id="sender" style="display: none">
+            <textarea class="form-control" id="message-inp" placeholder="Message..."></textarea>
+            <span class="input-group-btn">
+                <button type="submit" class="btn btn-default" id="send-btn">Send</button>
+            </span>
+        </div>
+    </div>
+</div></body>
 </html>

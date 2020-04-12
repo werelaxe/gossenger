@@ -80,6 +80,6 @@ body {
     background-color: #3e6a97;
 }
 
-.search-user-box {
-
+#new-chat-box {
+    margin-bottom: 20px;
 }

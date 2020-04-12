@@ -2,6 +2,9 @@ let messagesWS = null;
 let chatsWS = null;
 let activeChatId = null;
 let displayNames = {};
+let chatTitles = {};
+let pickedUsers = new Map();
+let lastUsersSearch = null;
 
 
 function waitSocket(socket, callback) {
@@ -19,6 +22,14 @@ function waitSocket(socket, callback) {
             }
         },
         5);
+}
+
+
+function getDisplayTime(unixTimestamp) {
+    const date = new Date(unixTimestamp * 1000);
+    const hours = date.getHours();
+    const minutes = "0" + date.getMinutes();
+    return hours + ':' + minutes.substr(-2);
 }
 
 
@@ -74,10 +85,8 @@ function loadChatMembers(chatId) {
     jQuery.ajax({
         url: "/chats/list_members?chat_id=" + chatId,
         success: function (data) {
-            const chat = getChat(chatId);
             const users = JSON.parse(data);
             saveNames(users);
-            $("#chat-caption").text(chat.text() + " [" + getSeparatedDisplayNames(users) + "]");
         },
         error: function (data) {
             console.log("Fail while listing chat members");
@@ -89,6 +98,9 @@ function loadChatMembers(chatId) {
 
 
 function activateChat(id) {
+    if (activeChatId === id) {
+        return;
+    }
     loadChatMembers(id);
     clearMessages();
     loadMessages(id);
@@ -100,7 +112,15 @@ function activateChat(id) {
         sendMessage(id, $("#message-inp").val());
     });
 
+    getChat(activeChatId).removeClass("active-chat");
+    getChat(id).addClass("active-chat");
+    setMainContentTitle("Messages of " + chatTitles[id]);
     activeChatId = id;
+}
+
+
+function setMainContentTitle(text) {
+    $("#main-content-title").text(text);
 }
 
 
@@ -121,18 +141,39 @@ function sendMessage(chatId, text) {
 
 function addChat(title, id) {
     const chatsDiv = $("#chats");
-    const newDiag = $("<li id='chat-" + id + "'>" + title + "</li>");
-    newDiag.on("click", function () {
+    const newChat = $(`
+        <div class="chat-box" id="chat-${id}">
+            <div class="chat-title">
+                <span>${title}</span>
+            </div>
+            <div class="chat-message-preview">
+                <span>Message preview</span>
+            </div>
+        </div>
+    `);
+    newChat.on("click", function () {
         activateChat(id);
     });
-    chatsDiv.append(newDiag);
+    chatsDiv.append(newChat);
+    chatTitles[id] = title;
 }
 
 
 function addMessage(text, senderId, time) {
     const messagesDiv = $("#messages");
-    const newMessage = $(`<li><a href="/user_page?user_id=${senderId}">${displayNames[senderId]}</a>: '${text}', time: ${time}</li>`);
+    const newMessage = $(`
+        <div class="message-box">
+            <div>
+                <span class="message-sender-name"><a href="/user_page?user_id=${senderId}">${displayNames[senderId]}</a></span>
+                <span class="message-time">${getDisplayTime(time)}</span>
+            </div>
+            <div class="message-text">
+                <span>${text}</span>
+            </div>
+        </div>
+    `);
     messagesDiv.append(newMessage);
+    fullScrollMessages();
 }
 
 
@@ -144,6 +185,10 @@ function loadChats() {
         })
         .done(function (data) {
             const chats = JSON.parse(data);
+            if (chats === null) {
+                console.log("Chats == null");
+                return;
+            }
             chats.forEach(function (chat) {
                 addChat(chat["title"], chat["chat_id"]);
             })
@@ -172,7 +217,7 @@ function loadMessages(chatId) {
 
 
 function setLogoutButtonHandler() {
-    let logoutButton = $("#logout-btn");
+    let logoutButton = $("#logout-el");
     logoutButton.on("click", function () {
         clearCookies();
         location.reload();
@@ -184,13 +229,8 @@ function setCreateChatHandler() {
     const createChatButton = $("#create-chat-btn");
 
     createChatButton.on("click", function () {
-        const title = $("#title-inp").val();
-        const members = $("#members-inp").val()
-            .split(",")
-            .map(function (rawId) {
-                return parseInt(rawId);
-            });
-
+        const title = $("#new-chat-title-inp").val();
+        const members = Array.from(pickedUsers.keys());
         const createChatReq = JSON.stringify({
             "title": title,
             "members": members
@@ -203,10 +243,118 @@ function setCreateChatHandler() {
     });
 }
 
+function addFoundUser(user) {
+    const displayName = user["first_name"] + " " + user["last_name"];
+    displayNames[user["id"]] = displayName;
+    const newButton = $(`<button type="submit" class="btn btn-default">Add</button>`);
+    newButton.on("click", function () {
+        pickedUsers.set(user["id"], user);
+        updatePickedUsers();
+        updateSearchUsers();
+        $("#search-users-inp").val("")
+    });
+    addUserToTable($("#search-table"), displayName, user["nickname"], user["id"], newButton);
+}
+
+
+function addPickedUser(user) {
+    const displayName = user["first_name"] + " " + user["last_name"];
+    displayNames[user["id"]] = displayName;
+    const newButton = $(`<button type="submit" class="btn btn-default">Remove</button>`);
+    newButton.on("click", function () {
+        pickedUsers.delete(user["id"]);
+        updatePickedUsers();
+        updateSearchUsers();
+    });
+    addUserToTable($("#picked-users"), displayName, user["nickname"], user["id"], newButton);
+}
+
+
+function addUserToTable(table, displayName, nickname, id, button) {
+    const newTr = $(`<tr></tr>`);
+    newTr.append($(`<td>${displayName}</td>`));
+    newTr.append($(`<td>${nickname}</td>`));
+    const newTd = $(`<td></td>`);
+    newTd.append(button);
+    newTr.append(newTd);
+    table.append(newTr);
+}
+
+
+function clearFoundUsers() {
+    $("#search-table").empty();
+}
+
+function clearPickedUsers() {
+    $("#picked-users").empty();
+}
+
+function updateSearchUsers() {
+    clearFoundUsers();
+    lastUsersSearch.forEach(function (user) {
+        if (!pickedUsers.has(user["id"])) {
+            addFoundUser(user);
+        }
+    });
+}
+
+function updatePickedUsers() {
+    clearPickedUsers();
+    pickedUsers.forEach(function (user) {
+        addPickedUser(user);
+    });
+}
+
+function setShowChatCreatingContentHandler() {
+    $("#show-create-chat-btn").on("click", function () {
+        setMainContentTitle("Select users for a new chat");
+        $("#prompt").hide();
+        $("#chat-creating").show();
+        const searchUsersInput = $("#search-users-inp");
+        searchUsersInput.on("keyup paste", function () {
+            const filter = searchUsersInput.val();
+            if (filter.length < 3) {
+                clearFoundUsers();
+                return;
+            }
+            $.get("/users/search?filter=" + filter)
+                .fail(function (data) {
+                    console.log("Fail while searching users");
+                    console.log(data)
+                })
+                .done(function (data) {
+                    lastUsersSearch = JSON.parse(data);
+                    updateSearchUsers();
+                })
+        });
+    });
+}
 
 function setIndexPageHandlers() {
     setLogoutButtonHandler();
     setCreateChatHandler();
+}
+
+
+function normalizeMessagesHeight() {
+    $("#messages").css("height", $(window).height() - 205);
+}
+
+
+function normalizeChatsHeight() {
+    $("#chats").css("height", $(window).height() - 150);
+}
+
+
+function fullScrollMessages() {
+    const messages = $("#messages");
+    messages.scrollTop(messages[0].scrollHeight);
+}
+
+
+function setResizingHandlers() {
+    $(window).resize(normalizeMessagesHeight);
+    $(window).resize(normalizeChatsHeight);
 }
 
 
@@ -216,6 +364,10 @@ function initIndexPage() {
     loadChats();
     setMessagesReceivingHandler();
     setChatsReceivingHandler();
+    normalizeMessagesHeight();
+    normalizeChatsHeight();
+    setResizingHandlers();
+    setShowChatCreatingContentHandler();
 }
 
 

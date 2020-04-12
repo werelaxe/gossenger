@@ -27,7 +27,7 @@ func CreateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) commo
 
 		var users []*models.User
 
-		for memberId := range common.Unique(createChatData.Members) {
+		for memberId := range common.Unique(append(createChatData.Members, loggedUser.ID)) {
 			member, err := api.GetUserById(memberId)
 			if err != nil {
 				log.Println("Can not create chat: " + err.Error())
@@ -55,10 +55,10 @@ func CreateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) commo
 			return
 		}
 
-		for _, userId := range createChatData.Members {
+		for _, userId := range append(createChatData.Members, loggedUser.ID) {
 			conn, ok := connKeeper[common.ChatsConnType][userId]
 			if !ok {
-				log.Printf("Can not get connection for loggedUser with ID=%v\n", loggedUser.ID)
+				log.Printf("Can not get connection for loggedUser with ID=%v\n", userId)
 			} else {
 				if err := conn.WriteMessage(1, rawFastChatCreatingResponseData); err != nil {
 					log.Println("Can not write to the loggedUser connection: " + err.Error())
