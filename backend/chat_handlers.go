@@ -183,7 +183,7 @@ func ListChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 			if firstElement.LastMessageTime != 0 && secondElement.LastMessageTime != 0 {
 				return firstElement.LastMessageTime < secondElement.LastMessageTime
 			} else if firstElement.LastMessageTime == 0 && secondElement.LastMessageTime == 0 {
-				return firstElement.ChatCreationTime < secondElement.ChatCreationTime
+				return firstElement.ChatCreationTime > secondElement.ChatCreationTime
 			} else if firstElement.LastMessageTime != 0 {
 				return firstElement.LastMessageTime < secondElement.ChatCreationTime
 			} else {
