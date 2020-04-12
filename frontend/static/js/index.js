@@ -121,8 +121,6 @@ function activateChat(id) {
         setMainContentTitle("Messages");
         hideSender();
         activeChatId = id;
-        // resetHandler(messageInp, "keydown keyup");
-        // resetHandler(sendButton, "click");
         return;
     }
     loadChatMembers(id);
@@ -211,13 +209,13 @@ function addChat(title, id, previewMessageText, previewMessageSender) {
     const senderDisplayName = getDisplayName(previewMessageSender);
 
     if (previewMessageText === "") {
-        addChatElement(title, id, `${senderDisplayName} created chat ${title}`);
+        addChatElement(title, id, `${senderDisplayName} created chat ${title}`, true);
     } else {
-        addChatElement(title, id, `${senderDisplayName}: ${previewMessageText}`);
+        addChatElement(title, id, `${senderDisplayName}: ${previewMessageText}`, false);
     }
 }
 
-function addChatElement(title, id, messagePreview) {
+function addChatElement(title, id, messagePreview, isNewChat) {
     const chatsDiv = $("#chats");
     const newChat = $(`
         <div class="chat-box" id="chat-${id}">
@@ -232,7 +230,11 @@ function addChatElement(title, id, messagePreview) {
     newChat.on("click", function () {
         activateChat(id);
     });
-    chatsDiv.append(newChat);
+    if (isNewChat) {
+        chatsDiv.prepend(newChat);
+    } else {
+        chatsDiv.append(newChat);
+    }
     chatTitles[id] = title;
 }
 
