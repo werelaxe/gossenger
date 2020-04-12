@@ -116,8 +116,11 @@ function activateChat(id) {
     let sendButton = $("#send-btn");
     sendButton.unbind("click");
     sendButton.on("click", function () {
-        sendMessage(id, messageInp.val());
-        messageInp.val("");
+        const messageText = messageInp.val();
+        if (messageText.replace(/\s/g,'').length === 0) {
+            return;
+        }
+        sendMessage(id, messageText);
     });
 
     messageInp.on("keydown", function (event) {
@@ -125,8 +128,11 @@ function activateChat(id) {
             if (event.ctrlKey || event.metaKey) {
                 messageInp.val(messageInp.val() + "\n");
             } else {
-                sendMessage(id, messageInp.val());
-                messageInp.val("");
+                const messageText = messageInp.val();
+                if (messageText.replace(/\s/g,'').length === 0) {
+                    return;
+                }
+                sendMessage(id, messageText);
             }
         }
     });
