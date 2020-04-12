@@ -102,12 +102,6 @@ function loadChatMembers(chatId) {
     });
 }
 
-
-function resetHandler(element, events) {
-    element.off(events);
-}
-
-
 function activateChat(id) {
     if (activeChatId === id) {
         return;
@@ -327,6 +321,11 @@ function setCreateChatHandler() {
             .fail(function (data) {
                 console.log("Fail while creating a chat");
                 console.log(data)
+            })
+            .done(function (data) {
+                resetElements();
+                const chatId =  JSON.parse(data)["chat_id"];
+                activateChat(chatId);
             })
     });
 }
