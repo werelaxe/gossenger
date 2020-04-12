@@ -60,6 +60,7 @@ function setChatsReceivingHandler() {
     chatsWS.onmessage = function (e) {
         const chat = JSON.parse(e.data);
         addChat(chat["title"], chat["id"], chat["preview_message_text"], chat["preview_message_sender"]);
+        moveChatToTop(chat["id"]);
     }
 }
 
@@ -205,9 +206,9 @@ function addChat(title, id, previewMessageText, previewMessageSender) {
     const senderDisplayName = getDisplayName(previewMessageSender);
 
     if (previewMessageText === "") {
-        addChatElement(title, id, `${senderDisplayName} created chat ${title}`, true);
+        addChatElement(title, id, `${senderDisplayName} created chat ${title}`);
     } else {
-        addChatElement(title, id, `${senderDisplayName}: ${previewMessageText}`, false);
+        addChatElement(title, id, `${senderDisplayName}: ${previewMessageText}`);
     }
 }
 
@@ -217,7 +218,7 @@ function moveChatToTop(chatId) {
     $("#chats").prepend(chat);
 }
 
-function addChatElement(title, id, messagePreview, isNewChat) {
+function addChatElement(title, id, messagePreview) {
     const chatsDiv = $("#chats");
     const newChat = $(`
         <div class="chat-box" id="chat-${id}">
@@ -232,11 +233,7 @@ function addChatElement(title, id, messagePreview, isNewChat) {
     newChat.on("click", function () {
         activateChat(id);
     });
-    if (isNewChat) {
-        chatsDiv.prepend(newChat);
-    } else {
-        chatsDiv.append(newChat);
-    }
+    chatsDiv.append(newChat);
     chatTitles[id] = title;
 }
 
