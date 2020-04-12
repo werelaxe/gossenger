@@ -101,23 +101,35 @@ function loadChatMembers(chatId) {
 }
 
 
+function resetHandler(element, events) {
+    element.off(events);
+}
+
+
 function activateChat(id) {
     if (activeChatId === id) {
         return;
     }
-    if (activeChatId === null) {
-        getChat(activeChatId).removeClass("active-chat");
+    $("#chat-creating").hide();
+    $("#prompt").hide();
+
+    const messageInp = $("#message-inp");
+    const sendButton = $("#send-btn");
+
+    if (id === null) {
+        getChat(activeChatId).removeClass("active-chat disable-hover");
         setMainContentTitle("Messages");
+        hideSender();
         activeChatId = id;
+        // resetHandler(messageInp, "keydown keyup");
+        // resetHandler(sendButton, "click");
+        return;
     }
     loadChatMembers(id);
     clearMessages();
     loadMessages(id);
     showSender();
 
-    const messageInp = $("#message-inp");
-
-    let sendButton = $("#send-btn");
     sendButton.unbind("click");
     sendButton.on("click", function () {
         const messageText = messageInp.val();
@@ -125,8 +137,10 @@ function activateChat(id) {
             return;
         }
         sendMessage(id, messageText);
+        messageInp.val("");
     });
 
+    messageInp.unbind("keydown");
     messageInp.on("keydown", function (event) {
         if (event.keyCode === 13) {
             if (event.ctrlKey || event.metaKey) {
@@ -141,6 +155,7 @@ function activateChat(id) {
         }
     });
 
+    messageInp.unbind("keyup");
     messageInp.on("keyup", function (event) {
         if (event.keyCode === 13) {
             messageInp.val("");
@@ -368,12 +383,21 @@ function updatePickedUsers() {
     });
 }
 
+function resetElements() {
+    activateChat(null);
+    $("#chat-creating").hide();
+    clearMessages();
+    $("#prompt").show();
+    hideSender();
+    setMainContentTitle("Messages");
+}
+
 function setShowChatCreatingContentHandler() {
     const handler = function () {
         $("#prompt").hide();
-        $("#chat-creating").show();
         clearMessages();
         activateChat(null);
+        $("#chat-creating").show();
         setMainContentTitle("Select users for a new chat");
 
         const searchUsersInput = $("#search-users-inp");
