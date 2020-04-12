@@ -41,37 +41,38 @@
     </div>
     <div class="col-md-6">
         <h2 id="main-content-title">Messages</h2>
+        <div id="chat-creating" style="display: none">
+            <div class="input-group" id="new-chat-box">
+                <input class="form-control" id="new-chat-title-inp" placeholder="New chat title...">
+                <span class="input-group-btn">
+                        <button type="submit" class="btn btn-default" id="create-chat-btn">Create</button>
+                    </span>
+            </div>
+
+            <div class="search-user-box">
+                <table class="table table-hover">
+                    <tbody id="picked-users">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="form-group" id="chat-creating-search">
+                <label for="search-users-inp">Search users</label>
+                <input class="form-control" id="search-users-inp" type="text" placeholder="Input name or nick">
+            </div>
+            <div class="search-user-box">
+                <table class="table table-hover">
+                    <tbody id="search-table">
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <div class="messages-content" id="messages">
 
             <p id="prompt">
                 Select a chat to view messages or <a id="show-create-chat-btn-1" style="cursor: pointer">create</a> a new one.
             </p>
-            <div id="chat-creating" style="display: none">
-                <div class="input-group" id="new-chat-box">
-                    <input class="form-control" id="new-chat-title-inp" placeholder="New chat title...">
-                    <span class="input-group-btn">
-                        <button type="submit" class="btn btn-default" id="create-chat-btn">Create</button>
-                    </span>
-                </div>
 
-                <div class="search-user-box">
-                    <table class="table table-hover">
-                        <tbody id="picked-users">
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="form-group" id="chat-creating-search">
-                    <label for="search-users-inp">Search users</label>
-                    <input class="form-control" id="search-users-inp" type="text" placeholder="Input name or nick">
-                </div>
-                <div class="search-user-box">
-                    <table class="table table-hover">
-                        <tbody id="search-table">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
         <div class="input-group" id="sender" style="display: none">
             <textarea class="form-control" id="message-inp" placeholder="Message..."></textarea>

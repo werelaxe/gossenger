@@ -1,8 +1,10 @@
 package models
 
 type ChatResponseSchema struct {
-	ChatId uint   `json:"chat_id"`
-	Title  string `json:"title"`
+	ChatId               uint   `json:"chat_id"`
+	Title                string `json:"title"`
+	PreviewMessageSender uint   `json:"preview_message_sender"`
+	PreviewMessageText   string `json:"preview_message_text"`
 }
 
 type ListChatsResponseSchema []ChatResponseSchema
@@ -32,8 +34,10 @@ type FastMessageResponseSchema struct {
 }
 
 type FastChatCreatingResponseSchema struct {
-	Title string `json:"title"`
-	ID    uint   `json:"id"`
+	Title                string `json:"title"`
+	ID                   uint   `json:"id"`
+	PreviewMessageSender uint   `json:"preview_message_sender"`
+	PreviewMessageText   string `json:"preview_message_text"`
 }
 
 type UserResponseSchema struct {

@@ -139,7 +139,7 @@ func (api *Api) ListChatMembers(chat *models.Chat) ([]*models.User, error) {
 	return members, nil
 }
 
-func (api *Api) ListUserChats(user *models.User) ([]*models.Chat, error) {
+func (api *Api) ListChats(user *models.User) ([]*models.Chat, error) {
 	var chats []*models.Chat
 	if err := api.Db.Model(user).Related(&chats, "chats").Error; err != nil {
 		return nil, errors.New("can not list user chats: " + err.Error())
@@ -205,4 +205,15 @@ func (api *Api) SearchUsers(filter string) ([]models.User, error) {
 		return nil, errors.New("can not search users: " + err.Error())
 	}
 	return users, nil
+}
+
+func (api *Api) GetChatLastMessage(chatId uint) (*models.Message, error) {
+	var lastMessages []models.Message
+	if err := api.Db.Where("chat_refer = ?", chatId).Order("time desc").Limit(1).Find(&lastMessages).Error; err != nil {
+		return nil, errors.New("can not get chat last message: " + err.Error())
+	}
+	if len(lastMessages) == 0 {
+		return nil, nil
+	}
+	return &lastMessages[0], nil
 }

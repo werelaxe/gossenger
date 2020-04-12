@@ -1,7 +1,7 @@
 let messagesWS = null;
 let chatsWS = null;
 let activeChatId = null;
-let displayNames = {};
+let displayNames = new Map();
 let chatTitles = {};
 let pickedUsers = new Map();
 let lastUsersSearch = null;
@@ -41,9 +41,15 @@ function translateSymbols(text) {
 function setMessagesReceivingHandler() {
     messagesWS.onmessage = function (e) {
         const message = JSON.parse(e.data);
-        if (activeChatId === message["chat_id"]) {
-            addMessage(message["text"], message["sender_id"], message["time"]);
+        const senderId = message["sender_id"];
+        const chatId = message["chat_id"];
+        const messageText = message["text"];
+
+        if (activeChatId === chatId) {
+            addMessage(messageText, senderId, message["time"]);
         }
+        const chatMessagePreview = $(`#chat-${chatId}-message-preview-text`);
+        chatMessagePreview.text(`${getDisplayName(senderId)}: ${messageText}`);
     }
 }
 
@@ -51,7 +57,7 @@ function setMessagesReceivingHandler() {
 function setChatsReceivingHandler() {
     chatsWS.onmessage = function (e) {
         const chat = JSON.parse(e.data);
-        addChat(chat["title"], chat["id"]);
+        addChat(chat["title"], chat["id"], chat["preview_message_text"], chat["preview_message_sender"]);
     }
 }
 
@@ -74,20 +80,13 @@ function getChat(id) {
 
 function saveNames(users) {
     users.forEach(function (user) {
-        displayNames[user["id"]] = user["first_name"] + " " + user["last_name"];
+        displayNames.set(user["id"], user["first_name"] + " " + user["last_name"]);
     });
 }
 
 
-function getSeparatedDisplayNames(users) {
-    return users.map(function (user) {
-        return displayNames[user["id"]];
-    }).join(", ");
-}
-
-
 function loadChatMembers(chatId) {
-    jQuery.ajax({
+    $.ajax({
         url: "/chats/list_members?chat_id=" + chatId,
         success: function (data) {
             const users = JSON.parse(data);
@@ -105,6 +104,11 @@ function loadChatMembers(chatId) {
 function activateChat(id) {
     if (activeChatId === id) {
         return;
+    }
+    if (activeChatId === null) {
+        getChat(activeChatId).removeClass("active-chat");
+        setMainContentTitle("Messages");
+        activeChatId = id;
     }
     loadChatMembers(id);
     clearMessages();
@@ -143,8 +147,8 @@ function activateChat(id) {
         }
     });
 
-    getChat(activeChatId).removeClass("active-chat");
-    getChat(id).addClass("active-chat");
+    getChat(activeChatId).removeClass("active-chat disable-hover");
+    getChat(id).addClass("active-chat disable-hover");
     setMainContentTitle("Messages of " + chatTitles[id]);
     activeChatId = id;
 }
@@ -170,7 +174,35 @@ function sendMessage(chatId, text) {
         });
 }
 
-function addChat(title, id) {
+function getDisplayName(userId) {
+    if (!displayNames.has(userId)) {
+        $.ajax({
+            url: "/users/show?user_id=" + userId,
+            success: function (data) {
+                const user = JSON.parse(data);
+                displayNames.set(user["id"], user["first_name"] + " " + user["last_name"]);
+            },
+            error: function (data) {
+                console.log("Fail while getting user info");
+                console.log(data)
+            },
+            async: false
+        });
+    }
+    return displayNames.get(userId)
+}
+
+function addChat(title, id, previewMessageText, previewMessageSender) {
+    const senderDisplayName = getDisplayName(previewMessageSender);
+
+    if (previewMessageText === "") {
+        addChatElement(title, id, `${senderDisplayName} created chat ${title}`);
+    } else {
+        addChatElement(title, id, `${senderDisplayName}: ${previewMessageText}`);
+    }
+}
+
+function addChatElement(title, id, messagePreview) {
     const chatsDiv = $("#chats");
     const newChat = $(`
         <div class="chat-box" id="chat-${id}">
@@ -178,7 +210,7 @@ function addChat(title, id) {
                 <span>${title}</span>
             </div>
             <div class="chat-message-preview">
-                <span>Message preview</span>
+                <span id="chat-${id}-message-preview-text">${messagePreview}</span>
             </div>
         </div>
     `);
@@ -195,7 +227,7 @@ function addMessage(text, senderId, time) {
     const newMessage = $(`
         <div class="message-box">
             <div>
-                <span class="message-sender-name"><a href="/user_page?user_id=${senderId}">${displayNames[senderId]}</a></span>
+                <span class="message-sender-name"><a href="/user_page?user_id=${senderId}">${displayNames.get(senderId)}</a></span>
                 <span class="message-time">${getDisplayTime(time)}</span>
             </div>
             <div class="message-text">
@@ -221,7 +253,7 @@ function loadChats() {
                 return;
             }
             chats.forEach(function (chat) {
-                addChat(chat["title"], chat["chat_id"]);
+                addChat(chat["title"], chat["chat_id"], chat["preview_message_text"], chat["preview_message_sender"]);
             })
         });
 }
@@ -276,7 +308,7 @@ function setCreateChatHandler() {
 
 function addFoundUser(user) {
     const displayName = user["first_name"] + " " + user["last_name"];
-    displayNames[user["id"]] = displayName;
+    displayNames.set(user["id"], displayName);
     const newButton = $(`<button type="submit" class="btn btn-default">Add</button>`);
     newButton.on("click", function () {
         pickedUsers.set(user["id"], user);
@@ -290,7 +322,7 @@ function addFoundUser(user) {
 
 function addPickedUser(user) {
     const displayName = user["first_name"] + " " + user["last_name"];
-    displayNames[user["id"]] = displayName;
+    displayNames.set(user["id"], displayName);
     const newButton = $(`<button type="submit" class="btn btn-default">Remove</button>`);
     newButton.on("click", function () {
         pickedUsers.delete(user["id"]);
@@ -338,9 +370,12 @@ function updatePickedUsers() {
 
 function setShowChatCreatingContentHandler() {
     const handler = function () {
-        setMainContentTitle("Select users for a new chat");
         $("#prompt").hide();
         $("#chat-creating").show();
+        clearMessages();
+        activateChat(null);
+        setMainContentTitle("Select users for a new chat");
+
         const searchUsersInput = $("#search-users-inp");
         searchUsersInput.on("keyup paste", function () {
             const filter = searchUsersInput.val();

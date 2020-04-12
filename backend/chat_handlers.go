@@ -45,8 +45,9 @@ func CreateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) commo
 		}
 
 		fastChatCreatingResponseData := models.FastChatCreatingResponseSchema{
-			Title: createChatData.Title,
-			ID:    newChatId,
+			Title:                createChatData.Title,
+			ID:                   newChatId,
+			PreviewMessageSender: loggedUser.ID,
 		}
 
 		rawFastChatCreatingResponseData, err := json.Marshal(fastChatCreatingResponseData)
@@ -126,7 +127,7 @@ func AddUserToChatHandler(api *dbapi.Api) common.HandlerFuncType {
 	}
 }
 
-func ListUserChatsHandler(api *dbapi.Api) common.HandlerFuncType {
+func ListChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		loggedUser := EnsureLogin(api, request)
 		if loggedUser == nil {
@@ -134,19 +135,36 @@ func ListUserChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		chats, err := api.ListUserChats(loggedUser)
+		chats, err := api.ListChats(loggedUser)
 		if err != nil {
-			log.Println("Can not list loggedUser chats: " + err.Error())
+			log.Println("Can not list chats: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
 
 		var listChatsResponseData models.ListChatsResponseSchema
 		for _, chat := range chats {
-			listChatsResponseData = append(listChatsResponseData, models.ChatResponseSchema{
-				ChatId: chat.ID,
-				Title:  chat.Title,
-			})
+			lastMessage, err := api.GetChatLastMessage(chat.ID)
+			if err != nil {
+				log.Println("Can not list chats: " + err.Error())
+				writer.WriteHeader(400)
+				return
+			}
+
+			if lastMessage != nil {
+				listChatsResponseData = append(listChatsResponseData, models.ChatResponseSchema{
+					ChatId:               chat.ID,
+					Title:                chat.Title,
+					PreviewMessageText:   lastMessage.Text,
+					PreviewMessageSender: lastMessage.SenderRefer,
+				})
+			} else {
+				listChatsResponseData = append(listChatsResponseData, models.ChatResponseSchema{
+					ChatId:               chat.ID,
+					Title:                chat.Title,
+					PreviewMessageSender: chat.AdminRefer,
+				})
+			}
 		}
 
 		rawListChatsResponseData, err := json.Marshal(listChatsResponseData)

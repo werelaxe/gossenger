@@ -26,6 +26,12 @@ body {
     margin-top: -1px;
 }
 
+.chat-box:hover {
+    background-color: #444444;
+    border: 1px solid #444444;
+    margin-top: -1px;
+}
+
 .chat-title {
     font-weight: bold;
     font-size: 18px;
@@ -37,6 +43,7 @@ body {
     padding-top: 3px;
     padding-left: 30px;
     padding-bottom: 10px;
+    font-size: 13px;
 }
 
 .chats-content {
@@ -82,4 +89,8 @@ body {
 
 #new-chat-box {
     margin-bottom: 20px;
+}
+
+.disable-hover {
+    pointer-events: none;
 }
