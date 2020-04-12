@@ -29,7 +29,7 @@ func RegisterHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		if err := api.RegisterUser(registerUserData.Nickname, registerUserData.FirstName, registerUserData.LastName, registerUserData.Password); err != nil {
+		if _, err := api.RegisterUser(registerUserData.Nickname, registerUserData.FirstName, registerUserData.LastName, registerUserData.Password); err != nil {
 			log.Println("Can not register user: " + err.Error())
 			writer.WriteHeader(400)
 			return

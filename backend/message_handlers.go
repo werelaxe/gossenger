@@ -5,6 +5,7 @@ import (
 	"gossenger/common"
 	"gossenger/dbapi"
 	"gossenger/models"
+	"html"
 	"log"
 	"net/http"
 	"strconv"
@@ -26,6 +27,8 @@ func SendMessageHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) comm
 			return
 		}
 
+		escapedMessageText := html.EscapeString(sendMessageData.Text)
+
 		chat, err := api.GetChat(sendMessageData.ChatId)
 		if err != nil {
 			log.Println("Can not send message: " + err.Error())
@@ -33,7 +36,7 @@ func SendMessageHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) comm
 			return
 		}
 
-		if err := api.SendMessage(sendMessageData.Text, loggedUser.ID, sendMessageData.ChatId); err != nil {
+		if err := api.SendMessage(escapedMessageText, loggedUser.ID, sendMessageData.ChatId); err != nil {
 			log.Println("Can not send message: " + err.Error())
 			writer.WriteHeader(400)
 			return
@@ -46,7 +49,7 @@ func SendMessageHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) comm
 		}
 
 		fastMessageResponseData := models.FastMessageResponseSchema{
-			Text:     sendMessageData.Text,
+			Text:     escapedMessageText,
 			SenderId: loggedUser.ID,
 			Time:     time.Now().Unix(),
 			ChatId:   sendMessageData.ChatId,

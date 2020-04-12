@@ -28,17 +28,20 @@ func (api *Api) Close() {
 	api.Redis.Close()
 }
 
-func (api *Api) RegisterUser(nickname, firstName, lastName, password string) error {
+func (api *Api) RegisterUser(nickname, firstName, lastName, password string) (uint, error) {
+	newUserRow := new(models.User)
+
 	result := api.Db.Create(&models.User{
 		Nickname:     nickname,
 		FirstName:    firstName,
 		LastName:     lastName,
 		PasswordHash: common.Hash(password),
-	})
+	}).Scan(&newUserRow)
+
 	if result.Error != nil {
-		return result.Error
+		return 0, result.Error
 	}
-	return nil
+	return newUserRow.ID, nil
 }
 
 func (api *Api) IsValidPair(nickname, password string) (bool, error) {

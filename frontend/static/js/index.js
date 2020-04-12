@@ -33,6 +33,11 @@ function getDisplayTime(unixTimestamp) {
 }
 
 
+function translateSymbols(text) {
+    return text.replace("\n", "<br>");
+}
+
+
 function setMessagesReceivingHandler() {
     messagesWS.onmessage = function (e) {
         const message = JSON.parse(e.data);
@@ -106,10 +111,30 @@ function activateChat(id) {
     loadMessages(id);
     showSender();
 
+    const messageInp = $("#message-inp");
+
     let sendButton = $("#send-btn");
     sendButton.unbind("click");
     sendButton.on("click", function () {
-        sendMessage(id, $("#message-inp").val());
+        sendMessage(id, messageInp.val());
+        messageInp.val("");
+    });
+
+    messageInp.on("keydown", function (event) {
+        if (event.keyCode === 13) {
+            if (event.ctrlKey || event.metaKey) {
+                messageInp.val(messageInp.val() + "\n");
+            } else {
+                sendMessage(id, messageInp.val());
+                messageInp.val("");
+            }
+        }
+    });
+
+    messageInp.on("keyup", function (event) {
+        if (event.keyCode === 13) {
+            messageInp.val("");
+        }
     });
 
     getChat(activeChatId).removeClass("active-chat");
@@ -168,7 +193,7 @@ function addMessage(text, senderId, time) {
                 <span class="message-time">${getDisplayTime(time)}</span>
             </div>
             <div class="message-text">
-                <span>${text}</span>
+                <span>${translateSymbols(text)}</span>
             </div>
         </div>
     `);
@@ -306,7 +331,7 @@ function updatePickedUsers() {
 }
 
 function setShowChatCreatingContentHandler() {
-    $("#show-create-chat-btn").on("click", function () {
+    const handler = function () {
         setMainContentTitle("Select users for a new chat");
         $("#prompt").hide();
         $("#chat-creating").show();
@@ -327,8 +352,11 @@ function setShowChatCreatingContentHandler() {
                     updateSearchUsers();
                 })
         });
-    });
+    };
+    $("#show-create-chat-btn-1").on("click", handler);
+    $("#show-create-chat-btn-2").on("click", handler);
 }
+
 
 function setIndexPageHandlers() {
     setLogoutButtonHandler();
