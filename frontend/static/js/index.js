@@ -253,8 +253,17 @@ function addChat(title, id, previewMessageText, previewMessageSender) {
 function moveChatToTop(chatId) {
     const chat = getChat(chatId);
     chat.remove();
+    chat.on("click", getChatHandler(chatId));
     $("#chats").prepend(chat);
 }
+
+
+function getChatHandler(id) {
+    return function () {
+        activateChat(id);
+    };
+}
+
 
 function addChatElement(title, id, messagePreview) {
     const chatsDiv = $("#chats");
@@ -268,9 +277,7 @@ function addChatElement(title, id, messagePreview) {
             </div>
         </div>
     `);
-    newChat.on("click", function () {
-        activateChat(id);
-    });
+    newChat.on("click", getChatHandler(id));
     chatsDiv.append(newChat);
     chatTitles[id] = title;
 }
