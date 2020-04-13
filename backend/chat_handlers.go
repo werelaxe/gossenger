@@ -175,10 +175,15 @@ func ListChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 			}
 
 			if lastMessage != nil {
+				previewMessageText := lastMessage.Text
+				if len(previewMessageText) > 40 {
+					previewMessageText = previewMessageText[:37] + "..."
+				}
+
 				listChatsResponseData = append(listChatsResponseData, models.ChatResponseSchema{
 					ChatId:               chat.ID,
 					Title:                chat.Title,
-					PreviewMessageText:   lastMessage.Text,
+					PreviewMessageText:   previewMessageText,
 					PreviewMessageSender: lastMessage.SenderRefer,
 				})
 				sortingMap[chat.ID] = TimePair{lastMessage.Time, 0}
