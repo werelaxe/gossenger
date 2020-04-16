@@ -114,14 +114,19 @@ func AddUserToChatHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		users, err := api.ListChatMembers(chat)
+		users, err := api.ListChatMembers(chat, common.MaxApiLimit, 0)
 		if err != nil {
 			log.Println("Can not add loggedUser to chat: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
 
-		uniqueUserIds := dbapi.GetUniqueUserIds(users)
+		uniqueUserIds, err := dbapi.GetUniqueUserIds(users)
+		if err != nil {
+			log.Println("Can not get unique user ids: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
 
 		if _, ok := uniqueUserIds[loggedUser.ID]; !ok {
 			log.Println("Can not add loggedUser to chat: logged loggedUser must be in chat")
@@ -151,7 +156,14 @@ func ListChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		chats, err := api.ListChats(loggedUser)
+		limit, offset, err := common.GetLimitAndOffset(request.URL.Query())
+		if err != nil {
+			log.Println("Can not list chats: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		chats, err := api.ListChats(loggedUser, limit, offset)
 		if err != nil {
 			log.Println("Can not list chats: " + err.Error())
 			writer.WriteHeader(400)
@@ -270,7 +282,7 @@ func ListChatMembersHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		members, err := api.ListChatMembers(chat)
+		members, err := api.ListChatMembers(chat, common.MaxApiLimit, 0)
 		if err != nil {
 			log.Println("Can not list chat members: " + err.Error())
 			writer.WriteHeader(400)

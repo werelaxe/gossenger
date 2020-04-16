@@ -2,6 +2,7 @@ package backend
 
 import (
 	"encoding/json"
+	"errors"
 	"gossenger/common"
 	"gossenger/dbapi"
 	"gossenger/models"
@@ -11,6 +12,23 @@ import (
 	"strconv"
 	"time"
 )
+
+func processAllChatMembers(api *dbapi.Api, chat *models.Chat, callback func([]*models.User)) error {
+	offset := 0
+	for {
+		users, err := api.ListChatMembers(chat, common.MaxApiLimit, offset)
+		if err != nil {
+			return errors.New("can not list chat members: " + err.Error())
+		}
+		if len(users) > 0 {
+			callback(users)
+		} else {
+			break
+		}
+		offset += common.MaxApiLimit
+	}
+	return nil
+}
 
 func SendMessageHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
@@ -42,12 +60,6 @@ func SendMessageHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) comm
 			return
 		}
 
-		users, err := api.ListChatMembers(chat)
-		if err != nil {
-			log.Println("Can not list chat members after message sending")
-			return
-		}
-
 		fastMessageResponseData := models.FastMessageResponseSchema{
 			Text:     escapedMessageText,
 			SenderId: loggedUser.ID,
@@ -61,16 +73,23 @@ func SendMessageHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) comm
 			return
 		}
 
-		for _, user := range users {
-			conn, ok := connKeeper[common.MessagesConnType][user.ID]
-			if !ok {
-				log.Printf("Can not get connection for loggedUser with ID=%v\n", user.ID)
-			} else {
+		chatMembersCallback := func(users []*models.User) {
+			for _, user := range users {
+				conn, ok := connKeeper[common.MessagesConnType][user.ID]
+				if !ok {
+					log.Printf("Can not get connection for loggedUser with ID=%v\n", user.ID)
+				} else {
 
-				if err := conn.WriteMessage(1, rawFastMessageResponseData); err != nil {
-					log.Println("Can not write to the loggedUser connection: " + err.Error())
+					if err := conn.WriteMessage(1, rawFastMessageResponseData); err != nil {
+						log.Println("Can not write to the loggedUser connection: " + err.Error())
+					}
 				}
 			}
+		}
+
+		if err := processAllChatMembers(api, chat, chatMembersCallback); err != nil {
+			log.Printf("Can not process all chat members, chat: %v, error: %v", chat, err)
+			return
 		}
 	}
 }
@@ -110,7 +129,14 @@ func ListMessagesHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		messages, err := api.ListMessages(uint(chatId))
+		limit, offset, err := common.GetLimitAndOffset(request.URL.Query())
+		if err != nil {
+			log.Println("Can not list messages: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		messages, err := api.ListMessages(uint(chatId), limit, offset)
 		if err != nil {
 			log.Println("Can not list messages: " + err.Error())
 			writer.WriteHeader(400)

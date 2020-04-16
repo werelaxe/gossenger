@@ -2,7 +2,10 @@ package common
 
 import (
 	"crypto/md5"
+	"errors"
 	"math/rand"
+	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -33,4 +36,30 @@ func Unique(slice []uint) map[uint]bool {
 		}
 	}
 	return keys
+}
+
+func GetLimitAndOffset(query url.Values) (int, int, error) {
+	var limit, offset int
+	var err error
+
+	rawLimit, ok := query["limit"]
+	if !ok {
+		limit = DefaultApiLimit
+	} else {
+		limit, err = strconv.Atoi(rawLimit[0])
+		if err != nil {
+			return 0, 0, errors.New("can not get limit and offset: " + err.Error())
+		}
+	}
+
+	rawOffset, ok := query["limit"]
+	if !ok {
+		offset = 0
+	} else {
+		offset, err = strconv.Atoi(rawOffset[0])
+		if err != nil {
+			return 0, 0, errors.New("can not get limit and offset: " + err.Error())
+		}
+	}
+	return limit, offset, nil
 }

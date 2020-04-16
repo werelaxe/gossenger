@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"github.com/go-redis/redis"
 	"github.com/jinzhu/gorm"
 	"gossenger/common"
 	"gossenger/models"
 	"time"
 )
+
+var limitExceededError *ApiError
 
 type Api struct {
 	Db    *gorm.DB
@@ -21,6 +24,7 @@ func (api *Api) Init() {
 	if result := api.Db.AutoMigrate(&models.User{}, &models.Message{}, &models.Chat{}); result.Error != nil {
 		panic(result.Error)
 	}
+	limitExceededError = &ApiError{message: fmt.Sprintf("limit must be less than %v", common.MaxApiLimit)}
 }
 
 func (api *Api) Close() {
@@ -92,16 +96,22 @@ func (api *Api) GetChat(id uint) (*models.Chat, error) {
 	return &chat, nil
 }
 
-func GetUniqueUserIds(users []*models.User) map[uint]bool {
+func GetUniqueUserIds(users []*models.User) (map[uint]bool, error) {
+	if len(users) > common.MaxApiLimit {
+		return nil, &ApiError{message: fmt.Sprintf("Users count must be less than %v", common.MaxApiLimit)}
+	}
 	var userIds []uint
 	for _, v := range users {
 		userIds = append(userIds, v.ID)
 	}
-	return common.Unique(userIds)
+	return common.Unique(userIds), nil
 }
 
 func (api *Api) CreateChat(title string, admin *models.User, users []*models.User) (uint, error) {
-	uniqueUserIds := GetUniqueUserIds(users)
+	uniqueUserIds, err := GetUniqueUserIds(users)
+	if err != nil {
+		return 0, err
+	}
 
 	if len(uniqueUserIds) < 2 {
 		return 0, errors.New("can not create chat: members must contain at least two unique users")
@@ -131,17 +141,23 @@ func (api *Api) AddUserToChat(user *models.User, chat *models.Chat) error {
 	return nil
 }
 
-func (api *Api) ListChatMembers(chat *models.Chat) ([]*models.User, error) {
+func (api *Api) ListChatMembers(chat *models.Chat, limit, offset int) ([]*models.User, error) {
+	if limit > common.MaxApiLimit {
+		return nil, limitExceededError
+	}
 	var members []*models.User
-	if err := api.Db.Model(chat).Related(&members, "members").Error; err != nil {
+	if err := api.Db.Limit(limit).Offset(offset).Model(chat).Related(&members, "members").Error; err != nil {
 		return nil, errors.New("can not list chat members: " + err.Error())
 	}
 	return members, nil
 }
 
-func (api *Api) ListChats(user *models.User) ([]*models.Chat, error) {
-	var chats []*models.Chat
-	if err := api.Db.Model(user).Related(&chats, "chats").Error; err != nil {
+func (api *Api) ListChats(user *models.User, limit, offset int) ([]models.Chat, error) {
+	if limit > common.MaxApiLimit {
+		return nil, limitExceededError
+	}
+	var chats []models.Chat
+	if err := api.Db.Limit(limit).Offset(offset).Model(user).Related(&chats, "chats").Error; err != nil {
 		return nil, errors.New("can not list user chats: " + err.Error())
 	}
 	return chats, nil
@@ -181,27 +197,36 @@ func (api *Api) SendMessage(messageText string, senderId, chatId uint) error {
 	return nil
 }
 
-func (api *Api) ListMessages(chatId uint) ([]models.Message, error) {
+func (api *Api) ListMessages(chatId uint, limit, offset int) ([]models.Message, error) {
+	if limit > common.MaxApiLimit {
+		return nil, limitExceededError
+	}
 	var messages []models.Message
-	if err := api.Db.Find(&messages, "chat_refer = ?", chatId).Error; err != nil {
+	if err := api.Db.Limit(limit).Offset(offset).Find(&messages, "chat_refer = ?", chatId).Error; err != nil {
 		return nil, errors.New("can not list messages: " + err.Error())
 	}
 	return messages, nil
 }
 
-func (api *Api) ListUsers() ([]models.User, error) {
+func (api *Api) ListUsers(limit, offset int) ([]models.User, error) {
+	if limit < common.MaxApiLimit {
+		return nil, limitExceededError
+	}
 	var users []models.User
-	if err := api.Db.Find(&users).Error; err != nil {
+	if err := api.Db.Limit(limit).Offset(offset).Find(&users).Error; err != nil {
 		return nil, errors.New("can not list users: " + err.Error())
 	}
 	return users, nil
 }
 
-func (api *Api) SearchUsers(filter string) ([]models.User, error) {
+func (api *Api) SearchUsers(filter string, limit, offset int) ([]models.User, error) {
+	if limit > common.MaxApiLimit {
+		return nil, limitExceededError
+	}
 	var users []models.User
 	query := "first_name ILIKE ? OR last_name ILIKE ? OR nickname ILIKE ?"
 	filterPattern := "%" + filter + "%"
-	if err := api.Db.Where(query, filterPattern, filterPattern, filterPattern).Find(&users).Error; err != nil {
+	if err := api.Db.Limit(limit).Offset(offset).Where(query, filterPattern, filterPattern, filterPattern).Find(&users).Error; err != nil {
 		return nil, errors.New("can not search users: " + err.Error())
 	}
 	return users, nil

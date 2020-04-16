@@ -31,7 +31,14 @@ func UsersPageHandler(api *dbapi.Api, templateManager *TemplateManager) common.H
 			return
 		}
 
-		users, err := api.ListUsers()
+		limit, offset, err := common.GetLimitAndOffset(request.URL.Query())
+		if err != nil {
+			log.Println("Can not return users page: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		users, err := api.ListUsers(limit, offset)
 		if err != nil {
 			log.Println("Can not return users page: " + err.Error())
 			writer.WriteHeader(400)

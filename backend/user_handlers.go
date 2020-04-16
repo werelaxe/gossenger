@@ -18,7 +18,14 @@ func ListUsersHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		users, err := api.ListUsers()
+		limit, offset, err := common.GetLimitAndOffset(request.URL.Query())
+		if err != nil {
+			log.Println("Can not list users: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		users, err := api.ListUsers(limit, offset)
 		if err != nil {
 			log.Println("Can not list users: " + err.Error())
 			writer.WriteHeader(400)
@@ -112,12 +119,19 @@ func SearchUsersHandler(api *dbapi.Api) common.HandlerFuncType {
 
 		filter, ok := request.URL.Query()["filter"]
 		if !ok {
-			log.Println("Can not show user: query parameters must contain filter")
+			log.Println("Can not search users: query parameters must contain filter")
 			writer.WriteHeader(400)
 			return
 		}
 
-		users, err := api.SearchUsers(filter[0])
+		limit, offset, err := common.GetLimitAndOffset(request.URL.Query())
+		if err != nil {
+			log.Println("Can not search users: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		users, err := api.SearchUsers(filter[0], limit, offset)
 		if err != nil {
 			log.Println("Can not search users: " + err.Error())
 			writer.WriteHeader(400)
