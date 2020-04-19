@@ -6,7 +6,8 @@ let chatTitles = {};
 let pickedUsers = new Map();
 let lastUsersSearch = null;
 let chatMembers = [];
-
+let chatsOffset = 0;
+const chatsOffsetDelta = 20;
 
 function waitSocket(socket, callback) {
     setTimeout(
@@ -322,7 +323,7 @@ function addMessage(text, senderId, time, prepend) {
 
 
 function loadChats() {
-    $.get("/chats/list")
+    $.get(`/chats/list?limit=${chatsOffsetDelta}&offset=${chatsOffset}`)
         .fail(function (data) {
             console.log("Fail while loading chats");
             console.log(data)
@@ -335,7 +336,8 @@ function loadChats() {
             }
             chats.forEach(function (chat) {
                 addChat(chat["title"], chat["chat_id"], chat["preview_message_text"], chat["preview_message_sender"]);
-            })
+            });
+            chatsOffset += chatsOffsetDelta;
         });
 }
 
@@ -516,6 +518,16 @@ function fullScrollMessages() {
 }
 
 
+function setScrollHandlers() {
+    const chats = $("#chats");
+    chats.on("scroll", function (e) {
+        if (chats[0].scrollHeight - chats.height() === chats.scrollTop()) {
+            loadChats();
+        }
+    });
+}
+
+
 function setResizingHandlers() {
     $(window).resize(normalizeMessagesHeight);
     $(window).resize(normalizeChatsHeight);
@@ -532,6 +544,7 @@ function initIndexPage() {
     normalizeChatsHeight();
     setResizingHandlers();
     setShowChatCreatingContentHandler();
+    setScrollHandlers();
 }
 
 
