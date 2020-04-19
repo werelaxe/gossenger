@@ -544,7 +544,6 @@ function setScrollHandlers() {
         }
         if (messages.scrollTop() < 300) {
             muteMessageScrolling = true;
-            console.log("op");
             messages.scrollTop(messages.scrollTop() + 1);
             loadMessages(activeChatId, false);
             setTimeout(function() {
