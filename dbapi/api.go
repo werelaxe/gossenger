@@ -236,7 +236,7 @@ func (api *Api) SearchUsers(filter string, limit, offset int) ([]models.User, er
 
 func (api *Api) GetChatLastMessage(chatId uint) (*models.Message, error) {
 	var lastMessages []models.Message
-	if err := api.Db.Where("chat_refer = ?", chatId).Order("time desc").Limit(1).Find(&lastMessages).Error; err != nil {
+	if err := api.Db.Where("chat_refer = ?", chatId).Order("created_at DESC").Limit(1).Find(&lastMessages).Error; err != nil {
 		return nil, errors.New("can not get chat last message: " + err.Error())
 	}
 	if len(lastMessages) == 0 {
