@@ -2,6 +2,7 @@ package backend
 
 import (
 	"encoding/json"
+	"errors"
 	"gossenger/common"
 	"gossenger/dbapi"
 	"gossenger/models"
@@ -163,11 +164,29 @@ func ListChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		chats, err := api.ListChats(loggedUser, limit, offset)
+		chats, err := api.ListChatsByCreationTime(loggedUser, limit, offset)
 		if err != nil {
 			log.Println("Can not list chats: " + err.Error())
 			writer.WriteHeader(400)
 			return
+		}
+
+		chatSet := map[uint]bool{}
+		for _, chat := range chats {
+			chatSet[chat.ID] = true
+		}
+
+		chatsByLastMessageTime, err := api.ListChatsByLastMessageTime(loggedUser, limit, offset)
+		if err != nil {
+			log.Println("Can not list chats: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		for _, additionalChat := range chatsByLastMessageTime {
+			if _, ok := chatSet[additionalChat.ID]; !ok {
+				chats = append(chats, additionalChat)
+			}
 		}
 
 		type TimePair struct {
@@ -222,6 +241,10 @@ func ListChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 				return firstElement.ChatCreationTime < secondElement.LastMessageTime
 			}
 		})
+
+		if len(listChatsResponseData) > limit {
+			listChatsResponseData = listChatsResponseData[:limit]
+		}
 
 		rawListChatsResponseData, err := json.Marshal(listChatsResponseData)
 		if err != nil {
@@ -309,6 +332,92 @@ func ListChatMembersHandler(api *dbapi.Api) common.HandlerFuncType {
 		_, err = writer.Write(rawListChatMembersResponseData)
 		if err != nil {
 			log.Println("Can not list chat members: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+	}
+}
+
+func getChatResponseData(api *dbapi.Api, chat *models.Chat) (*models.ChatResponseSchema, error) {
+	lastMessage, err := api.GetChatLastMessage(chat.ID)
+	if err != nil {
+		return nil, errors.New("can not get chat response data: " + err.Error())
+	}
+	if lastMessage != nil {
+		previewMessageText := lastMessage.Text
+		if len(previewMessageText) > 40 {
+			previewMessageText = previewMessageText[:37] + "..."
+		}
+		return &models.ChatResponseSchema{
+			ChatId:               chat.ID,
+			Title:                chat.Title,
+			PreviewMessageText:   previewMessageText,
+			PreviewMessageSender: lastMessage.SenderRefer,
+		}, nil
+	} else {
+		return &models.ChatResponseSchema{
+			ChatId:               chat.ID,
+			Title:                chat.Title,
+			PreviewMessageSender: chat.AdminRefer,
+		}, nil
+	}
+}
+
+func ShowChatHandler(api *dbapi.Api) common.HandlerFuncType {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		loggedUser := EnsureLogin(api, request)
+		if loggedUser == nil {
+			writer.WriteHeader(400)
+			return
+		}
+
+		rawChatId, ok := request.URL.Query()["chat_id"]
+
+		if !ok {
+			log.Println("Can not show chat: there is no chat_id parameter")
+			writer.WriteHeader(400)
+			return
+		}
+
+		chatId, err := strconv.ParseUint(rawChatId[0], 10, 64)
+		if err != nil {
+			log.Println("Can not show chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		ok, err = api.IsUserChatMember(loggedUser.ID, uint(chatId))
+		if err != nil {
+			log.Println("Can not show chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		if !ok {
+			log.Println("Can not show chat: loggedUser is not a member of requested chat")
+			writer.WriteHeader(400)
+			return
+		}
+
+		chat, err := api.GetChat(uint(chatId))
+		if err != nil {
+			log.Println("Can not show chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		chatResponseData, err := getChatResponseData(api, chat)
+
+		rawChatResponseData, err := json.Marshal(chatResponseData)
+		if err != nil {
+			log.Println("Can not show chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		_, err = writer.Write(rawChatResponseData)
+		if err != nil {
+			log.Println("Can not show chat: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
