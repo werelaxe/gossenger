@@ -52,7 +52,7 @@ func GetLimitAndOffset(query url.Values) (int, int, error) {
 		}
 	}
 
-	rawOffset, ok := query["limit"]
+	rawOffset, ok := query["offset"]
 	if !ok {
 		offset = 0
 	} else {

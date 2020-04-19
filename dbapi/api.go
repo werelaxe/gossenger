@@ -24,6 +24,7 @@ func (api *Api) Init() {
 	if result := api.Db.AutoMigrate(&models.User{}, &models.Message{}, &models.Chat{}); result.Error != nil {
 		panic(result.Error)
 	}
+	api.InitFunctions()
 	limitExceededError = &ApiError{message: fmt.Sprintf("limit must be less than %v", common.MaxApiLimit)}
 }
 
@@ -152,23 +153,14 @@ func (api *Api) ListChatMembers(chat *models.Chat, limit, offset int) ([]*models
 	return members, nil
 }
 
-func (api *Api) ListChatsByCreationTime(user *models.User, limit, offset int) ([]models.Chat, error) {
+func (api *Api) ListChats(user *models.User, limit, offset int) ([]models.Chat, error) {
+	api.Db.LogMode(true)
 	if limit > common.MaxApiLimit {
 		return nil, limitExceededError
 	}
 	var chats []models.Chat
-	if err := api.Db.Limit(limit).Offset(offset).Order("created_at DESC").Model(user).Related(&chats, "chats").Error; err != nil {
-		return nil, errors.New("can not list user chats: " + err.Error())
-	}
-	return chats, nil
-}
-
-func (api *Api) ListChatsByLastMessageTime(user *models.User, limit, offset int) ([]models.Chat, error) {
-	if limit > common.MaxApiLimit {
-		return nil, limitExceededError
-	}
-	var chats []models.Chat
-	if err := api.Db.Limit(limit).Offset(offset).Order("GET_LAST_MESSAGE_TIME(id) DESC NULLS LAST").Model(user).Related(&chats, "chats").Error; err != nil {
+	query := api.Db.Limit(limit).Offset(offset).Order("GET_LAST_ACTION_TIME(id) DESC").Model(user).Related(&chats, "chats")
+	if err := query.Error; err != nil {
 		return nil, errors.New("can not list user chats: " + err.Error())
 	}
 	return chats, nil

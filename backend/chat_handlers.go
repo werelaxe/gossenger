@@ -164,29 +164,11 @@ func ListChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		chats, err := api.ListChatsByCreationTime(loggedUser, limit, offset)
+		chats, err := api.ListChats(loggedUser, limit, offset)
 		if err != nil {
 			log.Println("Can not list chats: " + err.Error())
 			writer.WriteHeader(400)
 			return
-		}
-
-		chatSet := map[uint]bool{}
-		for _, chat := range chats {
-			chatSet[chat.ID] = true
-		}
-
-		chatsByLastMessageTime, err := api.ListChatsByLastMessageTime(loggedUser, limit, offset)
-		if err != nil {
-			log.Println("Can not list chats: " + err.Error())
-			writer.WriteHeader(400)
-			return
-		}
-
-		for _, additionalChat := range chatsByLastMessageTime {
-			if _, ok := chatSet[additionalChat.ID]; !ok {
-				chats = append(chats, additionalChat)
-			}
 		}
 
 		type TimePair struct {
