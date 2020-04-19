@@ -154,7 +154,6 @@ func (api *Api) ListChatMembers(chat *models.Chat, limit, offset int) ([]*models
 }
 
 func (api *Api) ListChats(user *models.User, limit, offset int) ([]models.Chat, error) {
-	api.Db.LogMode(true)
 	if limit > common.MaxApiLimit {
 		return nil, limitExceededError
 	}
