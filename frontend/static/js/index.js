@@ -7,7 +7,11 @@ let pickedUsers = new Map();
 let lastUsersSearch = null;
 let chatMembers = [];
 let chatsOffset = 0;
-const chatsOffsetDelta = 20;
+let messagesOffset = 0;
+const offsetDelta = 100;
+let muteMessageScrolling = false;
+let stopMessageScrolling = false;
+
 
 function waitSocket(socket, callback) {
     setTimeout(
@@ -152,6 +156,7 @@ function activateChat(id) {
     if (activeChatId === id) {
         return;
     }
+    messagesOffset = 0;
     $("#chat-creating").hide();
     $("#prompt").hide();
     hideInfoContent();
@@ -300,7 +305,7 @@ function addChatElement(title, id, messagePreview, prepend=false) {
 }
 
 
-function addMessage(text, senderId, time, prepend) {
+function addMessage(text, senderId, time, prepend, scroll=true) {
     const messagesDiv = $("#messages");
     const newMessage = $(`
         <div class="message-box">
@@ -318,12 +323,14 @@ function addMessage(text, senderId, time, prepend) {
     } else {
         messagesDiv.append(newMessage);
     }
-    fullScrollMessages();
+    if (scroll) {
+        fullScrollMessages();
+    }
 }
 
 
 function loadChats() {
-    $.get(`/chats/list?limit=${chatsOffsetDelta}&offset=${chatsOffset}`)
+    $.get(`/chats/list?limit=${offsetDelta}&offset=${chatsOffset}`)
         .fail(function (data) {
             console.log("Fail while loading chats");
             console.log(data)
@@ -337,7 +344,7 @@ function loadChats() {
             chats.forEach(function (chat) {
                 addChat(chat["title"], chat["chat_id"], chat["preview_message_text"], chat["preview_message_sender"]);
             });
-            chatsOffset += chatsOffsetDelta;
+            chatsOffset += offsetDelta;
         });
 }
 
@@ -347,17 +354,21 @@ function clearMessages() {
 }
 
 
-function loadMessages(chatId) {
-    $.get("/messages/list?chat_id=" + chatId)
+function loadMessages(chatId, scroll=true) {
+    $.get(`/messages/list?chat_id=${chatId}&limit=${offsetDelta}&offset=${messagesOffset}`)
         .fail(function (data) {
             console.log("Fail while loading messages");
             console.log(data)
         })
         .done(function (data) {
             const messages = JSON.parse(data);
+            if (messages.length === 0) {
+                stopMessageScrolling = true;
+            }
             messages.forEach(function (message) {
-                addMessage(message["text"], message["sender_id"], message["time"], true);
+                addMessage(message["text"], message["sender_id"], message["time"], true, scroll);
             });
+            messagesOffset += offsetDelta;
         });
 }
 
@@ -523,6 +534,22 @@ function setScrollHandlers() {
     chats.on("scroll", function (e) {
         if (chats[0].scrollHeight - chats.height() === chats.scrollTop()) {
             loadChats();
+        }
+    });
+
+    const messages = $("#messages");
+    messages.on("scroll", function (e) {
+        if (stopMessageScrolling || muteMessageScrolling) {
+            return;
+        }
+        if (messages.scrollTop() < 300) {
+            muteMessageScrolling = true;
+            console.log("op");
+            messages.scrollTop(messages.scrollTop() + 1);
+            loadMessages(activeChatId, false);
+            setTimeout(function() {
+                muteMessageScrolling = false;
+            }, 100);
         }
     });
 }

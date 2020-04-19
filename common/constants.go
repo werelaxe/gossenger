@@ -1,4 +1,4 @@
 package common
 
-const MaxApiLimit = 10
-const DefaultApiLimit = 1
+const MaxApiLimit = 50
+const DefaultApiLimit = 20

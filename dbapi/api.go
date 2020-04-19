@@ -204,7 +204,7 @@ func (api *Api) ListMessages(chatId uint, limit, offset int) ([]models.Message, 
 		return nil, limitExceededError
 	}
 	var messages []models.Message
-	if err := api.Db.Limit(limit).Offset(offset).Order("time DESC").Find(&messages, "chat_refer = ?", chatId).Error; err != nil {
+	if err := api.Db.Limit(limit).Offset(offset).Order("created_at DESC").Find(&messages, "chat_refer = ?", chatId).Error; err != nil {
 		return nil, errors.New("can not list messages: " + err.Error())
 	}
 	return messages, nil
