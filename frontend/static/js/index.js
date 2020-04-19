@@ -47,12 +47,24 @@ function setMessagesReceivingHandler() {
         const messageText = message["text"];
 
         if (activeChatId === chatId) {
-            addMessage(messageText, senderId, message["time"]);
+            addMessage(messageText, senderId, message["time"], false);
         }
 
-        const chatMessagePreview = $(`#chat-${chatId}-message-preview-text`);
-        chatMessagePreview.text(`${getDisplayName(senderId)}: ${messageText}`);
-        moveChatToTop(chatId);
+        if (getChat(chatId).length) {
+            const chatMessagePreview = $(`#chat-${chatId}-message-preview-text`);
+            chatMessagePreview.text(`${getDisplayName(senderId)}: ${messageText}`);
+            moveChatToTop(chatId);
+        } else {
+            $.get("/chats/show?chat_id=" + chatId)
+                .fail(function (data) {
+                    console.log("Fail while loading chat");
+                    console.log(data)
+                })
+                .done(function (rawChat) {
+                    const chat = JSON.parse(rawChat);
+                    addChat(chat["title"], chat["chat_id"], chat["preview_message_text"], chat["preview_message_sender"], true);
+                });
+        }
     }
 }
 
@@ -240,13 +252,13 @@ function getDisplayName(userId) {
     return displayNames.get(userId)
 }
 
-function addChat(title, id, previewMessageText, previewMessageSender) {
+function addChat(title, id, previewMessageText, previewMessageSender, prepend=false) {
     const senderDisplayName = getDisplayName(previewMessageSender);
 
     if (previewMessageText === "") {
-        addChatElement(title, id, `${senderDisplayName} created chat ${title}`);
+        addChatElement(title, id, `${senderDisplayName} created chat ${title}`, prepend);
     } else {
-        addChatElement(title, id, `${senderDisplayName}: ${previewMessageText}`);
+        addChatElement(title, id, `${senderDisplayName}: ${previewMessageText}`, prepend);
     }
 }
 
@@ -265,7 +277,7 @@ function getChatHandler(id) {
 }
 
 
-function addChatElement(title, id, messagePreview) {
+function addChatElement(title, id, messagePreview, prepend=false) {
     const chatsDiv = $("#chats");
     const newChat = $(`
         <div class="chat-box" id="chat-${id}">
@@ -278,12 +290,16 @@ function addChatElement(title, id, messagePreview) {
         </div>
     `);
     newChat.on("click", getChatHandler(id));
-    chatsDiv.append(newChat);
+    if (prepend) {
+        chatsDiv.prepend(newChat);
+    } else {
+        chatsDiv.append(newChat);
+    }
     chatTitles[id] = title;
 }
 
 
-function addMessage(text, senderId, time) {
+function addMessage(text, senderId, time, prepend) {
     const messagesDiv = $("#messages");
     const newMessage = $(`
         <div class="message-box">
@@ -296,7 +312,11 @@ function addMessage(text, senderId, time) {
             </div>
         </div>
     `);
-    messagesDiv.append(newMessage);
+    if (prepend) {
+        messagesDiv.prepend(newMessage);
+    } else {
+        messagesDiv.append(newMessage);
+    }
     fullScrollMessages();
 }
 
@@ -334,7 +354,7 @@ function loadMessages(chatId) {
         .done(function (data) {
             const messages = JSON.parse(data);
             messages.forEach(function (message) {
-                addMessage(message["text"], message["sender_id"], message["time"]);
+                addMessage(message["text"], message["sender_id"], message["time"], true);
             });
         });
 }
