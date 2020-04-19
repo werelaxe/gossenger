@@ -54,6 +54,7 @@ func main() {
 	http.HandleFunc("/chats/create", backend.CreateChatHandler(&api, connectionKeeper))
 	http.HandleFunc("/chats/add_user", backend.AddUserToChatHandler(&api))
 	http.HandleFunc("/chats/list", backend.ListChatsHandler(&api))
+	http.HandleFunc("/chats/show", backend.ShowChatHandler(&api))
 	http.HandleFunc("/chats/list_members", backend.ListChatMembersHandler(&api))
 
 	http.HandleFunc("/messages/send", backend.SendMessageHandler(&api, connectionKeeper))
