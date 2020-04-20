@@ -387,6 +387,18 @@ function setCreateChatHandler() {
 
     createChatButton.on("click", function () {
         const title = $("#new-chat-title-inp").val();
+        if (!title.length) {
+            showTooltip(createChatButton, "Chat title can not be empty");
+            return;
+        } else {
+            hideTooltip(createChatButton);
+        }
+
+        if (!pickedUsers.size) {
+            showTooltip(createChatButton, "Chat must contain at least two members");
+            return;
+        }
+
         const members = Array.from(pickedUsers.keys());
         const createChatReq = JSON.stringify({
             "title": title,
@@ -454,7 +466,7 @@ function clearPickedUsers() {
 function updateSearchUsers() {
     clearFoundUsers();
     lastUsersSearch.forEach(function (user) {
-        if (!pickedUsers.has(user["id"])) {
+        if (user["id"] !== loggedUserId && !pickedUsers.has(user["id"])) {
             addFoundUser(user);
         }
     });

@@ -10,7 +10,7 @@ const MaxNicknameLength = 20
 const MaxFirstNameLength = 20
 const MaxLastNameLength = 20
 
-const MinChatTitleLength = 3
+const MinChatTitleLength = 1
 const MaxChatTitleLength = 256
 
 const MinChatMembersCount = 2

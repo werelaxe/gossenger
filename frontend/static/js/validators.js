@@ -4,9 +4,9 @@ const firstNamePattern = /^[a-zA-Z]{3,20}$/;
 const lastNamePattern = /^[a-zA-Z]{3,20}$/;
 
 
-function showTooltip(field, text) {
+function showTooltip(field, text, position=null) {
     field.tooltip({
-        placement: 'right',
+        placement: position == null ? 'right' : position,
         trigger: 'manual',
         title: text,
     }).tooltip('show');
