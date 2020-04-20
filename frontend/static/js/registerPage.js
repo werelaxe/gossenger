@@ -9,16 +9,30 @@ function setRegisterButtonAbility() {
 }
 
 
+function isNicknameBusy(nickname) {
+    return  $.ajax({
+        url: "/users/show?nickname=" + nickname,
+        async: false
+    }).status / 100 <= 3;
+}
+
+
 function setRegisterButtonHandlers() {
     let registerButton = $("#register-btn");
     registerButton.on("click", function () {
-        let nickname = $("#nickname-inp").val();
+        let nicknameField = $("#nickname-inp");
+        let nickname = nicknameField.val();
         let password = $("#password-inp").val();
         let firstName = $("#first-name-inp").val();
         let lastName = $("#last-name-inp").val();
 
         if (!(isLoginCorrect && isPasswordCorrect && isFirstNameCorrect && isLastNameCorrect)) {
-            return;
+            return false;
+        }
+
+        if (isNicknameBusy(nickname)) {
+            showTooltip(nicknameField, "This nickname is busy");
+            return false;
         }
 
         let registerReq = JSON.stringify({
@@ -96,9 +110,22 @@ function setRegisterValidatorHandlers() {
 }
 
 
+function setNicknameCheckingHandler() {
+    let nicknameField = $("#nickname-inp");
+    nicknameField.on("change", function () {
+        if (isValid(nicknameField, nicknamePattern)) {
+            if (isNicknameBusy(nicknameField.val())) {
+                showTooltip(nicknameField, "This nickname is busy");
+            }
+        }
+    });
+}
+
+
 function initRegisterPage() {
     setRegisterButtonHandlers();
     setRegisterValidatorHandlers();
+    setNicknameCheckingHandler();
 }
 
 

@@ -60,12 +60,6 @@ func ListUsersHandler(api *dbapi.Api) common.HandlerFuncType {
 
 func ShowUserHandler(api *dbapi.Api) common.HandlerFuncType {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		loggedUser := EnsureLogin(api, request)
-		if loggedUser == nil {
-			writer.WriteHeader(400)
-			return
-		}
-
 		rawUserId, isUserIdPassed := request.URL.Query()["user_id"]
 		nickname, isNicknamePassed := request.URL.Query()["nickname"]
 
