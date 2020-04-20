@@ -62,7 +62,7 @@ func CreateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) commo
 			return
 		}
 
-		for _, userId := range append(createChatData.Members, loggedUser.ID) {
+		for _, userId := range append(createChatData.Members) {
 			conn, ok := connKeeper[common.ChatsConnType][userId]
 			if !ok {
 				log.Printf("Can not get connection for loggedUser with ID=%v\n", userId)
