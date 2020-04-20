@@ -8,7 +8,7 @@ let lastUsersSearch = null;
 let chatMembers = [];
 let chatsOffset = 0;
 let messagesOffset = 0;
-const offsetDelta = 100;
+const offsetDelta = 50;
 let muteMessageScrolling = false;
 let stopMessageScrolling = false;
 

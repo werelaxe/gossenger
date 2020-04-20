@@ -26,7 +26,7 @@ func LoginHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		ok, err := api.IsValidPair(loginUserData.Nickname, loginUserData.Password)
+		ok, err := api.IsValidPair(&loginUserData)
 		if err != nil {
 			log.Println("Can not check pair: " + err.Error())
 			writer.WriteHeader(400)
@@ -39,7 +39,7 @@ func LoginHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		salt := api.CreateSession(loginUserData.Nickname)
+		salt, _ := api.CreateSession(loginUserData.Nickname)
 
 		if err := Auth(loginUserData.Nickname, writer, salt); err != nil {
 			log.Println("Can not login user: " + err.Error())

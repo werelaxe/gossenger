@@ -33,14 +33,17 @@ func (api *Api) Close() {
 	api.Redis.Close()
 }
 
-func (api *Api) RegisterUser(nickname, firstName, lastName, password string) (uint, error) {
+func (api *Api) RegisterUser(registerUserRequestData *models.RegisterUserRequestSchema) (uint, error) {
+	if !registerUserRequestData.IsValid() {
+		return 0, &models.ValidationError{Message: "incorrect register user request data"}
+	}
 	newUserRow := new(models.User)
 
 	result := api.Db.Create(&models.User{
-		Nickname:     nickname,
-		FirstName:    firstName,
-		LastName:     lastName,
-		PasswordHash: common.Hash(password),
+		Nickname:     registerUserRequestData.Nickname,
+		FirstName:    registerUserRequestData.FirstName,
+		LastName:     registerUserRequestData.LastName,
+		PasswordHash: common.Hash(registerUserRequestData.Password),
 	}).Scan(&newUserRow)
 
 	if result.Error != nil {
@@ -49,22 +52,31 @@ func (api *Api) RegisterUser(nickname, firstName, lastName, password string) (ui
 	return newUserRow.ID, nil
 }
 
-func (api *Api) IsValidPair(nickname, password string) (bool, error) {
+func (api *Api) IsValidPair(loginUserRequestData *models.LoginUserRequestSchema) (bool, error) {
+	if !loginUserRequestData.IsValid() {
+		return false, &models.ValidationError{Message: "incorrect login user request data"}
+	}
 	var user models.User
 
-	if err := api.Db.Where("nickname = ?", nickname).First(&user).Error; err != nil {
+	if err := api.Db.Where("nickname = ?", loginUserRequestData.Nickname).First(&user).Error; err != nil {
 		return false, err
 	}
-	return bytes.Equal(user.PasswordHash, common.Hash(password)), nil
+	return bytes.Equal(user.PasswordHash, common.Hash(loginUserRequestData.Password)), nil
 }
 
-func (api *Api) CreateSession(nickname string) string {
+func (api *Api) CreateSession(nickname string) (string, error) {
+	if !models.IsValidNickname(nickname) {
+		return "", &models.ValidationError{Message: "incorrect nickname"}
+	}
 	salt := common.RandStringRunes(20)
 	api.Redis.Set(nickname, salt, time.Hour*24)
-	return salt
+	return salt, nil
 }
 
 func (api *Api) ValidateSession(nickname, sid string) bool {
+	if !models.IsValidNickname(nickname) {
+		return false
+	}
 	salt := api.Redis.Get(nickname)
 	con := nickname + salt.Val()
 	if base64.StdEncoding.EncodeToString(common.Hash(con)) == sid {
@@ -74,6 +86,9 @@ func (api *Api) ValidateSession(nickname, sid string) bool {
 }
 
 func (api *Api) GetUserByNickname(nickname string) (*models.User, error) {
+	if !models.IsValidNickname(nickname) {
+		return nil, &models.ValidationError{Message: "incorrect nickname"}
+	}
 	var user models.User
 	if err := api.Db.Where("nickname = ?", nickname).First(&user).Error; err != nil {
 		return nil, errors.New("can not find user: " + err.Error())
@@ -108,23 +123,31 @@ func GetUniqueUserIds(users []*models.User) (map[uint]bool, error) {
 	return common.Unique(userIds), nil
 }
 
-func (api *Api) CreateChat(title string, admin *models.User, users []*models.User) (uint, error) {
-	uniqueUserIds, err := GetUniqueUserIds(users)
-	if err != nil {
-		return 0, err
+func (api *Api) CreateChat(createChatRequestData *models.CreateChatRequestSchema, admin *models.User) (uint, error) {
+	if !createChatRequestData.IsValid() {
+		return 0, &models.ValidationError{Message: "incorrect create chat request data"}
 	}
 
-	if len(uniqueUserIds) < 2 {
-		return 0, errors.New("can not create chat: members must contain at least two unique users")
+	var users []*models.User
+
+	uniqueMembers := common.Unique(createChatRequestData.Members)
+	for memberId := range uniqueMembers {
+		member, err := api.GetUserById(memberId)
+		if err != nil {
+			return 0, errors.New("can not create chat: " + err.Error())
+		}
+		users = append(users, member)
 	}
 
-	if _, ok := uniqueUserIds[admin.ID]; !ok {
+	if _, ok := uniqueMembers[admin.ID]; !ok {
 		return 0, errors.New("can not create chat: members must contain admin")
 	}
-
+	if !models.IsValidUsers(users) {
+		return 0, &models.ValidationError{Message: "incorrect users"}
+	}
 	chat := models.Chat{
 		AdminRefer: admin.ID,
-		Title:      title,
+		Title:      createChatRequestData.Title,
 		Members:    users,
 	}
 	if err := api.Db.Create(&chat).Error; err != nil {
@@ -134,6 +157,12 @@ func (api *Api) CreateChat(title string, admin *models.User, users []*models.Use
 }
 
 func (api *Api) AddUserToChat(user *models.User, chat *models.Chat) error {
+	if !user.IsValid() {
+		return &models.ValidationError{Message: "incorrect user"}
+	}
+	if !chat.IsValid() {
+		return &models.ValidationError{Message: "incorrect chat"}
+	}
 	chatMembersModel := api.Db.Model(chat).Association("members")
 	if chatMembersModel.Error != nil {
 		return errors.New("can not add user to chat: " + chatMembersModel.Error.Error())
@@ -143,6 +172,9 @@ func (api *Api) AddUserToChat(user *models.User, chat *models.Chat) error {
 }
 
 func (api *Api) ListChatMembers(chat *models.Chat, limit, offset int) ([]*models.User, error) {
+	if !chat.IsValid() {
+		return nil, &models.ValidationError{Message: "incorrect chat"}
+	}
 	if limit > common.MaxApiLimit {
 		return nil, limitExceededError
 	}
@@ -154,6 +186,9 @@ func (api *Api) ListChatMembers(chat *models.Chat, limit, offset int) ([]*models
 }
 
 func (api *Api) ListChats(user *models.User, limit, offset int) ([]models.Chat, error) {
+	if !user.IsValid() {
+		return nil, &models.ValidationError{Message: "incorrect user"}
+	}
 	if limit > common.MaxApiLimit {
 		return nil, limitExceededError
 	}
@@ -176,8 +211,11 @@ func (api *Api) IsUserChatMember(userId, chatId uint) (bool, error) {
 	return count > 0, nil
 }
 
-func (api *Api) SendMessage(messageText string, senderId, chatId uint) error {
-	ok, err := api.IsUserChatMember(senderId, chatId)
+func (api *Api) SendMessage(sendMessageRequestData *models.SendMessageRequestSchema, senderId uint) error {
+	if !sendMessageRequestData.IsValid() {
+		return &models.ValidationError{Message: "incorrect send message request data"}
+	}
+	ok, err := api.IsUserChatMember(senderId, sendMessageRequestData.ChatId)
 	if err != nil {
 		return errors.New("can not send message: " + err.Error())
 	}
@@ -186,9 +224,9 @@ func (api *Api) SendMessage(messageText string, senderId, chatId uint) error {
 	}
 
 	message := models.Message{
-		Text:        messageText,
+		Text:        sendMessageRequestData.Text,
 		SenderRefer: senderId,
-		ChatRefer:   chatId,
+		ChatRefer:   sendMessageRequestData.ChatId,
 		Time:        time.Now().Unix(),
 	}
 
@@ -222,6 +260,9 @@ func (api *Api) ListUsers(limit, offset int) ([]models.User, error) {
 }
 
 func (api *Api) SearchUsers(filter string, limit, offset int) ([]models.User, error) {
+	if !models.IsValidSearchFilter(filter) {
+		return nil, &models.ValidationError{Message: "incorrect search filter"}
+	}
 	if limit > common.MaxApiLimit {
 		return nil, limitExceededError
 	}

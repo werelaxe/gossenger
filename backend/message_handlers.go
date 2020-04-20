@@ -46,6 +46,7 @@ func SendMessageHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) comm
 		}
 
 		escapedMessageText := html.EscapeString(sendMessageData.Text)
+		sendMessageData.Text = escapedMessageText
 
 		chat, err := api.GetChat(sendMessageData.ChatId)
 		if err != nil {
@@ -54,7 +55,7 @@ func SendMessageHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) comm
 			return
 		}
 
-		if err := api.SendMessage(escapedMessageText, loggedUser.ID, sendMessageData.ChatId); err != nil {
+		if err := api.SendMessage(&sendMessageData, loggedUser.ID); err != nil {
 			log.Println("Can not send message: " + err.Error())
 			writer.WriteHeader(400)
 			return

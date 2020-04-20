@@ -29,13 +29,13 @@ func RegisterHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		if _, err := api.RegisterUser(registerUserData.Nickname, registerUserData.FirstName, registerUserData.LastName, registerUserData.Password); err != nil {
+		if _, err := api.RegisterUser(&registerUserData); err != nil {
 			log.Println("Can not register user: " + err.Error())
 			writer.WriteHeader(400)
 			return
 		}
 
-		salt := api.CreateSession(registerUserData.Nickname)
+		salt, _ := api.CreateSession(registerUserData.Nickname)
 		if err := Auth(registerUserData.Nickname, writer, salt); err != nil {
 			log.Println("Can not auth after registration: " + err.Error())
 			writer.WriteHeader(400)

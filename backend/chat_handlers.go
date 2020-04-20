@@ -27,19 +27,8 @@ func CreateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) commo
 			return
 		}
 
-		var users []*models.User
-
-		for memberId := range common.Unique(append(createChatData.Members, loggedUser.ID)) {
-			member, err := api.GetUserById(memberId)
-			if err != nil {
-				log.Println("Can not create chat: " + err.Error())
-				writer.WriteHeader(400)
-				return
-			}
-			users = append(users, member)
-		}
-
-		newChatId, err := api.CreateChat(createChatData.Title, loggedUser, users)
+		createChatData.Members = append(createChatData.Members, loggedUser.ID)
+		newChatId, err := api.CreateChat(&createChatData, loggedUser)
 		if err != nil {
 			log.Println("Can not create chat: " + err.Error())
 			writer.WriteHeader(400)
