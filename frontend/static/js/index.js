@@ -572,6 +572,17 @@ function setResizingHandlers() {
 }
 
 
+function setClearingChatCreationHandler() {
+    $("#clear-chat-title-btn").on("click", function () {
+        $("#new-chat-title-inp").val("");
+        $("#search-users-inp").val("");
+        pickedUsers = new Map();
+        $("#picked-users").empty();
+        $("#search-table").empty();
+    });
+}
+
+
 function initIndexPage() {
     hideSender();
     setIndexPageHandlers();
@@ -583,6 +594,7 @@ function initIndexPage() {
     setResizingHandlers();
     setShowChatCreatingContentHandler();
     setScrollHandlers();
+    setClearingChatCreationHandler();
 }
 
 
