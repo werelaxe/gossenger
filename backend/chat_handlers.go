@@ -6,6 +6,7 @@ import (
 	"gossenger/common"
 	"gossenger/dbapi"
 	"gossenger/models"
+	"html"
 	"log"
 	"net/http"
 	"sort"
@@ -27,6 +28,7 @@ func CreateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) commo
 			return
 		}
 
+		createChatData.Title = html.EscapeString(createChatData.Title)
 		createChatData.Members = append(createChatData.Members, loggedUser.ID)
 		newChatId, err := api.CreateChat(&createChatData, loggedUser)
 		if err != nil {
