@@ -66,25 +66,39 @@ func ShowUserHandler(api *dbapi.Api) common.HandlerFuncType {
 			return
 		}
 
-		rawUserId, ok := request.URL.Query()["user_id"]
-		if !ok {
-			log.Println("Can not show user: query parameters must contain user_id")
+		rawUserId, isUserIdPassed := request.URL.Query()["user_id"]
+		nickname, isNicknamePassed := request.URL.Query()["nickname"]
+
+		if !(isUserIdPassed || isNicknamePassed) {
+			log.Println("Can not show user: query parameters must contain user_id or nickname")
 			writer.WriteHeader(400)
 			return
 		}
 
-		userId, err := strconv.ParseUint(rawUserId[0], 10, 64)
-		if err != nil {
-			log.Println("Can not show user: " + err.Error())
-			writer.WriteHeader(400)
-			return
-		}
+		var user *models.User
 
-		user, err := api.GetUserById(uint(userId))
-		if err != nil {
-			log.Println("Can not show user: " + err.Error())
-			writer.WriteHeader(400)
-			return
+		if isNicknamePassed {
+			var err error
+			user, err = api.GetUserByNickname(nickname[0])
+			if err != nil {
+				log.Println("Can not show user: " + err.Error())
+				writer.WriteHeader(400)
+				return
+			}
+		} else {
+			userId, err := strconv.ParseUint(rawUserId[0], 10, 64)
+			if err != nil {
+				log.Println("Can not show user: " + err.Error())
+				writer.WriteHeader(400)
+				return
+			}
+
+			user, err = api.GetUserById(uint(userId))
+			if err != nil {
+				log.Println("Can not show user: " + err.Error())
+				writer.WriteHeader(400)
+				return
+			}
 		}
 
 		userResponseData := models.UserResponseSchema{
