@@ -13,8 +13,9 @@ type LoginUserRequestSchema struct {
 }
 
 type CreateChatRequestSchema struct {
-	Title   string `json:"title"`
-	Members []uint `json:"members"`
+	Title     string `json:"title"`
+	Members   []uint `json:"members"`
+	IsPrivate bool   `json:"is_private"`
 }
 
 type AddUserToChatRequestSchema struct {

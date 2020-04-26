@@ -9,7 +9,6 @@ import (
 	"gossenger/common"
 	"gossenger/dbapi"
 	"gossenger/frontend"
-	"log"
 	"net/http"
 )
 
@@ -72,6 +71,4 @@ func main() {
 
 	http.HandleFunc("/messages_ws", backend.WebSocketHandler(&api, &upgrader, connectionKeeper, common.MessagesConnType))
 	http.HandleFunc("/chats_ws", backend.WebSocketHandler(&api, &upgrader, connectionKeeper, common.ChatsConnType))
-
-	log.Fatal(http.ListenAndServe(":8080", nil))
 }
