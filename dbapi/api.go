@@ -294,7 +294,7 @@ func (api *Api) ListMessages(chatId uint, limit, offset int) ([]models.Message, 
 }
 
 func (api *Api) ListUsers(limit, offset int) ([]models.User, error) {
-	if limit < common.MaxApiLimit {
+	if limit > common.MaxApiLimit {
 		return nil, limitExceededError
 	}
 	var users []models.User
