@@ -9,6 +9,7 @@ import (
 	"gossenger/common"
 	"gossenger/dbapi"
 	"gossenger/frontend"
+	"log"
 	"net/http"
 )
 
@@ -51,6 +52,7 @@ func main() {
 	http.HandleFunc("/login", backend.LoginHandler(&api))
 
 	http.HandleFunc("/chats/create", backend.CreateChatHandler(&api, connectionKeeper))
+	http.HandleFunc("/chats/create_private", backend.CreatePrivateChatHandler(&api, connectionKeeper))
 	http.HandleFunc("/chats/add_user", backend.AddUserToChatHandler(&api))
 	http.HandleFunc("/chats/list", backend.ListChatsHandler(&api))
 	http.HandleFunc("/chats/show", backend.ShowChatHandler(&api))
@@ -71,4 +73,6 @@ func main() {
 
 	http.HandleFunc("/messages_ws", backend.WebSocketHandler(&api, &upgrader, connectionKeeper, common.MessagesConnType))
 	http.HandleFunc("/chats_ws", backend.WebSocketHandler(&api, &upgrader, connectionKeeper, common.ChatsConnType))
+
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }

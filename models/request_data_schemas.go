@@ -31,3 +31,7 @@ type SendMessageRequestSchema struct {
 type ListChatMembersRequestSchema struct {
 	ChatId uint `json:"chat_id"`
 }
+
+type CreatePrivateChatRequestSchema struct {
+	UserId uint `json:"user_id"`
+}

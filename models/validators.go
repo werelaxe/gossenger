@@ -55,13 +55,11 @@ func (loginUserRequestData *LoginUserRequestSchema) IsValid() bool {
 }
 
 func (createChatRequestData *CreateChatRequestSchema) IsValid() bool {
-	if !IsValidChatTitle(createChatRequestData.Title) {
-		return false
-	}
 	if createChatRequestData.IsPrivate {
 		return len(createChatRequestData.Members) == 2
 	}
-	return len(createChatRequestData.Members) >= MinChatMembersCount &&
+	return IsValidChatTitle(createChatRequestData.Title) &&
+		len(createChatRequestData.Members) >= MinChatMembersCount &&
 		len(createChatRequestData.Members) <= MaxChatMembersCount
 }
 

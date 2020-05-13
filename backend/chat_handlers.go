@@ -396,3 +396,66 @@ func ShowChatHandler(api *dbapi.Api) common.HandlerFuncType {
 		}
 	}
 }
+
+func CreatePrivateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper) common.HandlerFuncType {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		loggedUser := EnsureLogin(api, request)
+		if loggedUser == nil {
+			writer.WriteHeader(400)
+			return
+		}
+
+		var createPrivateChatData models.CreatePrivateChatRequestSchema
+		if err := json.NewDecoder(request.Body).Decode(&createPrivateChatData); err != nil {
+			log.Println("Can not create private chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		chatId, err := api.CreateChat(&models.CreateChatRequestSchema{
+			Title:     "",
+			Members:   []uint{loggedUser.ID, createPrivateChatData.UserId},
+			IsPrivate: true,
+		}, loggedUser)
+
+		if err != nil {
+			log.Println("Can not create private chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		loggedUserFastChatCreatingResponseData := models.FastChatCreatingResponseSchema{
+			Title:                "Private chat",
+			ID:                   chatId,
+			PreviewMessageSender: 0,
+			PreviewMessageText:   "Preview message text",
+		}
+
+		rawFastChatCreatingResponseData, err := json.Marshal(loggedUserFastChatCreatingResponseData)
+		if err != nil {
+			log.Println("Can not marshal private chat creating response data after message sending")
+			return
+		}
+
+		loggedUserConn, ok := connKeeper[common.ChatsConnType][loggedUser.ID]
+		if !ok {
+			log.Printf("Can not get connection for loggedUser with ID=%v\n", loggedUser.ID)
+		} else {
+			if err := loggedUserConn.WriteMessage(1, rawFastChatCreatingResponseData); err != nil {
+				log.Println("Can not write to the loggedUser connection: " + err.Error())
+			}
+		}
+
+		for _, userId := range [2]uint{loggedUser.ID, createPrivateChatData.UserId} {
+			conn, ok := connKeeper[common.ChatsConnType][userId]
+			if !ok {
+				log.Printf("Can not get connection for loggedUser with ID=%v\n", userId)
+			} else {
+				if err := conn.WriteMessage(1, rawFastChatCreatingResponseData); err != nil {
+					log.Println("Can not write to the loggedUser connection: " + err.Error())
+				}
+			}
+		}
+
+	}
+}
