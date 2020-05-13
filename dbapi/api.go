@@ -330,3 +330,20 @@ func (api *Api) GetChatLastMessage(chatId uint) (*models.Message, error) {
 	}
 	return &lastMessages[0], nil
 }
+
+func (api *Api) GetAnotherUserFromPrivateChat(chat *models.Chat, userId uint) (*models.User, error) {
+	if !chat.IsPrivate {
+		return nil, errors.New("can not get another user, chat is not private")
+	}
+	users, err := api.ListChatMembers(chat, 2, 0)
+	if err != nil {
+		return nil, errors.New("can not get another user: " + err.Error())
+	}
+	if users[0].ID == userId {
+		return users[1], nil
+	} else if users[1].ID == userId {
+		return users[0], nil
+	} else {
+		return nil, errors.New("can not get another user: given user is not a member of chat")
+	}
+}
