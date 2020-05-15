@@ -262,7 +262,7 @@ function addChat(title, id, previewMessageText, previewMessageSender, prepend=fa
     const senderDisplayName = getDisplayName(previewMessageSender);
 
     if (previewMessageText === "") {
-        addChatElement(title, id, `${senderDisplayName} created chat ${title}`, prepend);
+        addChatElement(title, id, `${senderDisplayName} created private chat`, prepend);
     } else {
         addChatElement(title, id, `${senderDisplayName}: ${previewMessageText}`, prepend);
     }
@@ -411,11 +411,28 @@ function setCreateChatHandler() {
             })
             .done(function (data) {
                 resetElements();
-                const chatId =  JSON.parse(data)["chat_id"];
+                const chatId = JSON.parse(data)["chat_id"];
                 activateChat(chatId);
-            })
+            });
     });
 }
+
+
+function createPrivateChat(userId) {
+    const createChatReq = JSON.stringify({
+        "user_id": userId
+    });
+    $.post("/chats/create_private", createChatReq)
+        .fail(function (data) {
+            console.log("Fail while creating a chat");
+            console.log(data)
+        })
+        .done(function (data) {
+            const chatId = JSON.parse(data)["chat_id"];
+            activateChat(chatId);
+        });
+}
+
 
 function addFoundUser(user) {
     const displayName = user["first_name"] + " " + user["last_name"];
