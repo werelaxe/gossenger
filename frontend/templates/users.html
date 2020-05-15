@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Users Search</title>
     <script src="/static/js/jquery-3.4.1.min.js"></script>
+    <script src="/static/js/users.js"></script>
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/main.css" rel="stylesheet">
 </head>
@@ -30,6 +31,8 @@
     <div class="col-md-2"></div>
 
     <div class="col-md-8">
+        <input id="users-filter-fld" class="form-control" type="text" placeholder="Search" aria-label="Search">
+
         <table class="table table-hover table-bordered">
             <thead>
             <tr>
@@ -38,14 +41,14 @@
                 <th scope="col"><a href="">Nickname</a></th>
             </tr>
             </thead>
-            <tbody>
-            {{ range .Users }}
-                <tr>
-                    <td>{{ .FirstName }}</td>
-                    <td>{{ .LastName }}</td>
-                    <td><a href="/user_page?user_id={{ .ID }}">{{ .Nickname }}</a></td>
-                </tr>
-            {{ end }}
+            <tbody id="users">
+{{/*            {{ range .Users }}*/}}
+{{/*                <tr>*/}}
+{{/*                    <td>{{ .FirstName }}</td>*/}}
+{{/*                    <td>{{ .LastName }}</td>*/}}
+{{/*                    <td><a href="/user_page?user_id={{ .ID }}">{{ .Nickname }}</a></td>*/}}
+{{/*                </tr>*/}}
+{{/*            {{ end }}*/}}
             </tbody>
         </table>
     </div>
