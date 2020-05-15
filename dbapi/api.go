@@ -131,24 +131,45 @@ func (api *Api) GetPrivateRelation(firstUserId, secondUserId uint) (*models.Priv
 	if err := api.Db.
 		Where("first_user_refer = ? and second_user_refer = ?", firstUserId, secondUserId).
 		Find(&relations).Error; err != nil {
-		return nil, errors.New("can not check is private chat exists")
+		return nil, errors.New("can not check is private chat exists: " + err.Error())
 	}
-	return &relations[0], nil
+	if len(relations) != 0 {
+		return &relations[0], nil
+	}
+	return nil, nil
+}
+
+func (api *Api) CreatePrivateRelation(chatId uint, firstUserId, secondUserId uint) (*models.PrivateRelation, error) {
+	if firstUserId > secondUserId {
+		firstUserId, secondUserId = secondUserId, firstUserId
+	}
+	relation, err := api.GetPrivateRelation(firstUserId, secondUserId)
+	if err != nil {
+		return nil, errors.New("can not get private relation: " + err.Error())
+	}
+
+	if relation != nil {
+		return nil, errors.New("private relation is already exists")
+	}
+
+	if firstUserId > secondUserId {
+		firstUserId, secondUserId = secondUserId, firstUserId
+	}
+
+	privateRelation := models.PrivateRelation{
+		ChatRefer:       chatId,
+		FirstUserRefer:  firstUserId,
+		SecondUserRefer: secondUserId,
+	}
+	if err := api.Db.Create(&privateRelation).Error; err != nil {
+		return nil, errors.New("can not create private relation: " + err.Error())
+	}
+	return &privateRelation, nil
 }
 
 func (api *Api) CreateChat(createChatRequestData *models.CreateChatRequestSchema, admin *models.User) (uint, error) {
 	if !createChatRequestData.IsValid() {
 		return 0, &models.ValidationError{Message: "incorrect create chat request data"}
-	}
-
-	if createChatRequestData.IsPrivate {
-		relation, err := api.GetPrivateRelation(createChatRequestData.Members[0], createChatRequestData.Members[1])
-		if err != nil {
-			return 0, errors.New("can not create chat: " + err.Error())
-		}
-		if relation != nil {
-			return 0, errors.New("can not create private chat: it already exists")
-		}
 	}
 
 	var users []*models.User
@@ -185,18 +206,10 @@ func (api *Api) CreateChat(createChatRequestData *models.CreateChatRequestSchema
 		firstUserId := users[0].ID
 		secondUserId := users[1].ID
 
-		if firstUserId > secondUserId {
-			firstUserId, secondUserId = secondUserId, firstUserId
+		if _, err := api.CreatePrivateRelation(chat.ID, firstUserId, secondUserId); err != nil {
+			return 0, errors.New("can not create private chat relation: " + err.Error())
 		}
 
-		privateRelation := models.PrivateRelation{
-			ChatRefer:       chat.ID,
-			FirstUserRefer:  firstUserId,
-			SecondUserRefer: secondUserId,
-		}
-		if err := api.Db.Create(&privateRelation).Error; err != nil {
-			return 0, errors.New("can not create chat: " + err.Error())
-		}
 	}
 	return chat.ID, nil
 }

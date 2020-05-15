@@ -178,6 +178,17 @@ func ListChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 				return
 			}
 
+			chatTitle := "Chat title"
+			if chat.IsPrivate {
+				anotherUser, err := api.GetAnotherUserFromPrivateChat(&chat, loggedUser.ID)
+				if err != nil {
+					log.Println("Can not get another user for private chat display name")
+				} else {
+					chatTitle = anotherUser.FirstName + " " + anotherUser.LastName
+				}
+			} else {
+				chatTitle = chat.Title
+			}
 			if lastMessage != nil {
 				previewMessageText := lastMessage.Text
 				if len(previewMessageText) > 40 {
@@ -186,7 +197,7 @@ func ListChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 
 				listChatsResponseData = append(listChatsResponseData, models.ChatResponseSchema{
 					ChatId:               chat.ID,
-					Title:                chat.Title,
+					Title:                chatTitle,
 					PreviewMessageText:   previewMessageText,
 					PreviewMessageSender: lastMessage.SenderRefer,
 				})
@@ -194,7 +205,7 @@ func ListChatsHandler(api *dbapi.Api) common.HandlerFuncType {
 			} else {
 				listChatsResponseData = append(listChatsResponseData, models.ChatResponseSchema{
 					ChatId:               chat.ID,
-					Title:                chat.Title,
+					Title:                chatTitle,
 					PreviewMessageSender: chat.AdminRefer,
 				})
 				sortingMap[chat.ID] = TimePair{0, chat.CreatedAt.Unix()}
@@ -412,8 +423,21 @@ func CreatePrivateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper
 			return
 		}
 
+		privateRelation, err := api.GetPrivateRelation(createPrivateChatData.UserId, loggedUser.ID)
+		if err != nil {
+			log.Println("Can not create private chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		if privateRelation != nil {
+			log.Println("Can not create private chat: private relation is already exists")
+			writer.WriteHeader(400)
+			return
+		}
+
 		chatId, err := api.CreateChat(&models.CreateChatRequestSchema{
-			Title:     "",
+			Title:     "private chat",
 			Members:   []uint{loggedUser.ID, createPrivateChatData.UserId},
 			IsPrivate: true,
 		}, loggedUser)
@@ -424,16 +448,37 @@ func CreatePrivateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper
 			return
 		}
 
-		loggedUserFastChatCreatingResponseData := models.FastChatCreatingResponseSchema{
-			Title:                "Private chat",
-			ID:                   chatId,
-			PreviewMessageSender: 0,
-			PreviewMessageText:   "Preview message text",
+		rawResponseData, err := json.Marshal(struct {
+			ChatId uint `json:"chat_id"`
+		}{chatId})
+		if err != nil {
+			log.Println("Can not send response after creating private chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
 		}
 
-		rawFastChatCreatingResponseData, err := json.Marshal(loggedUserFastChatCreatingResponseData)
+		if _, err = writer.Write(rawResponseData); err != nil {
+			log.Println("Can not send response after creating private chat: " + err.Error())
+			writer.WriteHeader(400)
+			return
+		}
+
+		anotherUser, err := api.GetUserById(createPrivateChatData.UserId)
 		if err != nil {
-			log.Println("Can not marshal private chat creating response data after message sending")
+			log.Println("Can not get user by id for private chat title")
+			return
+		}
+
+		loggedUserFastChatCreatingResponseData := models.FastChatCreatingResponseSchema{
+			Title:                anotherUser.FirstName + " " + anotherUser.LastName,
+			ID:                   chatId,
+			PreviewMessageSender: loggedUser.ID,
+			PreviewMessageText:   "",
+		}
+
+		rawFastLoggedUserChatCreatingResponseData, err := json.Marshal(loggedUserFastChatCreatingResponseData)
+		if err != nil {
+			log.Println("Can not marshal private chat creating response data after message sending for logged user")
 			return
 		}
 
@@ -441,21 +486,30 @@ func CreatePrivateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper
 		if !ok {
 			log.Printf("Can not get connection for loggedUser with ID=%v\n", loggedUser.ID)
 		} else {
-			if err := loggedUserConn.WriteMessage(1, rawFastChatCreatingResponseData); err != nil {
+			if err := loggedUserConn.WriteMessage(1, rawFastLoggedUserChatCreatingResponseData); err != nil {
 				log.Println("Can not write to the loggedUser connection: " + err.Error())
 			}
 		}
 
-		for _, userId := range [2]uint{loggedUser.ID, createPrivateChatData.UserId} {
-			conn, ok := connKeeper[common.ChatsConnType][userId]
-			if !ok {
-				log.Printf("Can not get connection for loggedUser with ID=%v\n", userId)
-			} else {
-				if err := conn.WriteMessage(1, rawFastChatCreatingResponseData); err != nil {
-					log.Println("Can not write to the loggedUser connection: " + err.Error())
-				}
-			}
+		anotherUserFastChatCreatingResponseData := models.FastChatCreatingResponseSchema{
+			Title:                loggedUser.FirstName + " " + loggedUser.LastName,
+			ID:                   chatId,
+			PreviewMessageSender: loggedUser.ID,
+			PreviewMessageText:   "",
 		}
 
+		rawFastAnotherUserChatCreatingResponseData, err := json.Marshal(anotherUserFastChatCreatingResponseData)
+		if err != nil {
+			log.Println("Can not marshal private chat creating response data after message sending for another user")
+			return
+		}
+		anotherUserConn, ok := connKeeper[common.ChatsConnType][anotherUser.ID]
+		if !ok {
+			log.Printf("Can not get connection for another user with ID=%v\n", loggedUser.ID)
+		} else {
+			if err := anotherUserConn.WriteMessage(1, rawFastAnotherUserChatCreatingResponseData); err != nil {
+				log.Println("Can not write to the another user connection: " + err.Error())
+			}
+		}
 	}
 }
