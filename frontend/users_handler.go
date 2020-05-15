@@ -10,10 +10,11 @@ import (
 )
 
 type UserPageSchema struct {
-	ID        uint
-	FirstName string
-	LastName  string
-	Nickname  string
+	ID            uint
+	FirstName     string
+	LastName      string
+	Nickname      string
+	PrivateUserId uint
 }
 
 func UsersPageHandler(api *dbapi.Api, templateManager *TemplateManager) common.HandlerFuncType {

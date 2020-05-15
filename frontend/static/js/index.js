@@ -345,6 +345,9 @@ function loadChats() {
                 addChat(chat["title"], chat["chat_id"], chat["preview_message_text"], chat["preview_message_sender"]);
             });
             chatsOffset += offsetDelta;
+            if (privateUserIdToEnsure !== 0) {
+                ensurePrivateChat(privateUserIdToEnsure);
+            }
         });
 }
 
@@ -425,8 +428,12 @@ function ensurePrivateChat(userId) {
     $.post("/chats/create_private", createChatReq)
         .fail(function (data) {
             console.log("Fail while creating a chat");
+            console.log(data);
             if (data.responseText.startsWith("is already exists")) {
-                activateChat(parseInt(data.responseText.split(": ")[1]));
+                console.log(data.responseText);
+                const chatId = parseInt(data.responseText.split(": ")[1]);
+                console.log("Calling activateChat with " + chatId);
+                activateChat(chatId, true);
             }
         })
         .done(function (data) {
