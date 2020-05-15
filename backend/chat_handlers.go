@@ -433,6 +433,7 @@ func CreatePrivateChatHandler(api *dbapi.Api, connKeeper common.ConnectionKeeper
 		if privateRelation != nil {
 			log.Println("Can not create private chat: private relation is already exists")
 			writer.WriteHeader(400)
+			writer.Write([]byte("is already exists: " + strconv.Itoa(int(privateRelation.ChatRefer))))
 			return
 		}
 

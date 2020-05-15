@@ -418,14 +418,16 @@ function setCreateChatHandler() {
 }
 
 
-function createPrivateChat(userId) {
+function ensurePrivateChat(userId) {
     const createChatReq = JSON.stringify({
         "user_id": userId
     });
     $.post("/chats/create_private", createChatReq)
         .fail(function (data) {
             console.log("Fail while creating a chat");
-            console.log(data)
+            if (data.responseText.startsWith("is already exists")) {
+                activateChat(parseInt(data.responseText.split(": ")[1]));
+            }
         })
         .done(function (data) {
             const chatId = JSON.parse(data)["chat_id"];
