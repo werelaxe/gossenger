@@ -9,4 +9,4 @@ RUN go get github.com/gorilla/websocket && \
     go get github.com/go-redis/redis
 RUN go build -o gossenger
 
-ENTRYPOINT ["./gossenger"]
+ENTRYPOINT ["./gossenger", "prod.config"]
