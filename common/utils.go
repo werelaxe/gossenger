@@ -3,6 +3,7 @@ package common
 import (
 	"crypto/md5"
 	"errors"
+	"fmt"
 	"math/rand"
 	"net/url"
 	"strconv"
@@ -62,4 +63,8 @@ func GetLimitAndOffset(query url.Values) (int, int, error) {
 		}
 	}
 	return limit, offset, nil
+}
+
+func GetAddr(host string, port int) string {
+	return fmt.Sprintf("%s:%d", host, port)
 }

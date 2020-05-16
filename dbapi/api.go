@@ -9,6 +9,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"gossenger/common"
 	"gossenger/models"
+	"strconv"
 	"time"
 )
 
@@ -19,13 +20,55 @@ type Api struct {
 	Redis *redis.Client
 }
 
-func (api *Api) Init() {
+func GetApiByConfig(config *common.Config) (*Api, error) {
+	postgresUrl := fmt.Sprintf(
+		"host=%s "+
+			"port=%d "+
+			"user=%s "+
+			"dbname=%s "+
+			"password=%s "+
+			"sslmode=disable",
+		config.DataBase.Host,
+		config.DataBase.Port,
+		config.DataBase.User,
+		config.DataBase.Name,
+		config.DataBase.Password,
+	)
+
+	db, err := gorm.Open("postgres", postgresUrl)
+	if err != nil {
+		return nil, errors.New("can not get api by config: " + err.Error())
+	}
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     config.Redis.Host + ":" + strconv.Itoa(config.Redis.Port),
+		Password: config.Redis.Password,
+		DB:       config.Redis.DB,
+	})
+
+	if status := redisClient.Ping(); status.Err() != nil {
+		return nil, errors.New("Redis connection error:" + status.Err().Error())
+	}
+
+	api := Api{
+		Db:    db,
+		Redis: redisClient,
+	}
+	if err := api.Init(); err != nil {
+		return nil, errors.New("can not get api by config")
+	}
+
+	return &api, nil
+}
+
+func (api *Api) Init() error {
 	common.InitRandom()
 	if result := api.Db.AutoMigrate(&models.User{}, &models.Message{}, &models.Chat{}, &models.PrivateRelation{}); result.Error != nil {
-		panic(result.Error)
+		return errors.New("can not init api: " + result.Error.Error())
 	}
 	api.InitFunctions()
 	limitExceededError = &ApiError{message: fmt.Sprintf("limit must be less than %v", common.MaxApiLimit)}
+	return nil
 }
 
 func (api *Api) Close() {
