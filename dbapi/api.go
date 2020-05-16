@@ -9,7 +9,6 @@ import (
 	"github.com/jinzhu/gorm"
 	"gossenger/common"
 	"gossenger/models"
-	"strconv"
 	"time"
 )
 
@@ -41,7 +40,7 @@ func GetApiByConfig(config *common.Config) (*Api, error) {
 	}
 
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     config.Redis.Host + ":" + strconv.Itoa(config.Redis.Port),
+		Addr:     common.GetAddr(config.Redis.Host, config.Redis.Port),
 		Password: config.Redis.Password,
 		DB:       config.Redis.DB,
 	})
